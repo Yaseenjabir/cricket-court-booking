@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
 // Layouts
 import CustomerLayout from "./components/layout/CustomerLayout";
@@ -29,6 +30,7 @@ import AdminNewBooking from "./pages/admin/AdminNewBooking";
 import AdminPromos from "./pages/admin/AdminPromos";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminSettings from "./pages/admin/AdminSettings";
+import ScrollToTop from "./pages/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +40,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           {/* Customer Routes */}
           <Route element={<CustomerLayout />}>

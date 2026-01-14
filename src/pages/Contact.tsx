@@ -6,10 +6,19 @@ import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
 
 const Contact = () => {
   const contactInfo = [
-    { icon: MapPin, title: "Address", content: "123 Sports Avenue, Al Malqa District, Riyadh 12345, Saudi Arabia" },
+    {
+      icon: MapPin,
+      title: "Address",
+      content:
+        "123 Sports Avenue, Al Malqa District, Riyadh 12345, Saudi Arabia",
+    },
     { icon: Phone, title: "Phone", content: "+966 50 123 4567" },
-    { icon: Mail, title: "Email", content: "info@cricketcourt.sa" },
-    { icon: Clock, title: "Operating Hours", content: "9:00 AM - 4:00 AM (Next Day), Daily" },
+    { icon: Mail, title: "Email", content: "info@jeddahcricketnets.sa" },
+    {
+      icon: Clock,
+      title: "Operating Hours",
+      content: "9:00 AM - 4:00 AM (Next Day), Daily",
+    },
   ];
 
   return (
@@ -21,7 +30,8 @@ const Contact = () => {
             Contact Us
           </h1>
           <p className="text-primary-foreground/80 text-lg max-w-2xl mx-auto">
-            Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+            Have questions? We'd love to hear from you. Send us a message and
+            we'll respond as soon as possible.
           </p>
         </div>
       </section>
@@ -32,7 +42,9 @@ const Contact = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Contact Form */}
             <div className="bg-card rounded-xl border p-8">
-              <h2 className="text-2xl font-bold text-foreground mb-6">Send us a Message</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-6">
+                Send us a Message
+              </h2>
               <form className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -46,7 +58,11 @@ const Contact = () => {
                 </div>
                 <div>
                   <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" type="email" placeholder="john@example.com" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john@example.com"
+                  />
                 </div>
                 <div>
                   <Label htmlFor="phone">Phone Number</Label>
@@ -58,9 +74,9 @@ const Contact = () => {
                 </div>
                 <div>
                   <Label htmlFor="message">Message</Label>
-                  <Textarea 
-                    id="message" 
-                    placeholder="Tell us more about your inquiry..." 
+                  <Textarea
+                    id="message"
+                    placeholder="Tell us more about your inquiry..."
                     rows={5}
                   />
                 </div>
@@ -74,7 +90,9 @@ const Contact = () => {
             {/* Contact Info */}
             <div className="space-y-6">
               <div className="bg-card rounded-xl border p-8">
-                <h2 className="text-2xl font-bold text-foreground mb-6">Get in Touch</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-6">
+                  Get in Touch
+                </h2>
                 <div className="space-y-6">
                   {contactInfo.map((item, index) => (
                     <div key={index} className="flex items-start gap-4">
@@ -82,7 +100,9 @@ const Contact = () => {
                         <item.icon className="w-6 h-6 text-primary" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-foreground">{item.title}</h3>
+                        <h3 className="font-semibold text-foreground">
+                          {item.title}
+                        </h3>
                         <p className="text-muted-foreground">{item.content}</p>
                       </div>
                     </div>
@@ -96,7 +116,9 @@ const Contact = () => {
                   <div className="text-center">
                     <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
                     <p className="text-muted-foreground">Map View</p>
-                    <p className="text-sm text-muted-foreground">123 Sports Avenue, Riyadh</p>
+                    <p className="text-sm text-muted-foreground">
+                      123 Sports Avenue, Riyadh
+                    </p>
                   </div>
                 </div>
               </div>

@@ -25,7 +25,9 @@ const Header = () => {
             <div className="w-10 h-10 rounded-xl hero-gradient flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
               <Volleyball className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="font-bold text-xl text-foreground">CricketCourt</span>
+            <span className="font-bold text-xl text-foreground">
+              Jeddah Cricket Nets
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -52,12 +54,16 @@ const Header = () => {
                 Admin Login
               </Button>
             </Link>
-            
+
             <button
               className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
             </button>
           </div>
         </div>

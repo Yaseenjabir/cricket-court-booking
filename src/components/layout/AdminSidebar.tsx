@@ -1,17 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  ClipboardList, 
-  MapPin, 
-  DollarSign, 
-  Tag, 
-  BarChart3, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Calendar,
+  ClipboardList,
+  MapPin,
+  DollarSign,
+  Tag,
+  BarChart3,
+  Settings,
   LogOut,
   Volleyball,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -34,17 +34,21 @@ const AdminSidebar = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <aside className={cn(
-      "min-h-screen bg-sidebar text-sidebar-foreground flex flex-col transition-all duration-300",
-      collapsed ? "w-20" : "w-64"
-    )}>
+    <aside
+      className={cn(
+        "min-h-screen bg-sidebar text-sidebar-foreground flex flex-col transition-all duration-300",
+        collapsed ? "w-20" : "w-64"
+      )}
+    >
       {/* Logo */}
       <div className="p-4 flex items-center gap-3 border-b border-sidebar-border">
         <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center flex-shrink-0">
           <Volleyball className="w-6 h-6 text-sidebar-primary-foreground" />
         </div>
         {!collapsed && (
-          <span className="font-bold text-lg text-sidebar-foreground">CricketCourt</span>
+          <span className="font-bold text-lg text-sidebar-foreground">
+            Jeddah Cricket Nets
+          </span>
         )}
       </div>
 
@@ -62,7 +66,9 @@ const AdminSidebar = () => {
             )}
           >
             <item.icon className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+            {!collapsed && (
+              <span className="text-sm font-medium">{item.label}</span>
+            )}
           </Link>
         ))}
       </nav>
@@ -73,7 +79,11 @@ const AdminSidebar = () => {
           onClick={() => setCollapsed(!collapsed)}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
         >
-          {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+          {collapsed ? (
+            <ChevronRight className="w-5 h-5" />
+          ) : (
+            <ChevronLeft className="w-5 h-5" />
+          )}
           {!collapsed && <span className="text-sm font-medium">Collapse</span>}
         </button>
         <Link

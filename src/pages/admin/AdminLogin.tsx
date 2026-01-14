@@ -15,7 +15,10 @@ const AdminLogin = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // Demo validation
-    if (credentials.email === "admin@cricket.com" && credentials.password === "demo123") {
+    if (
+      credentials.email === "admin@cricket.com" &&
+      credentials.password === "demo123"
+    ) {
       window.location.href = "/admin/dashboard";
     } else {
       setError("Invalid credentials. Try admin@cricket.com / demo123");
@@ -32,7 +35,9 @@ const AdminLogin = () => {
               <Volleyball className="w-10 h-10 text-primary-foreground" />
             </div>
             <h1 className="text-2xl font-bold text-foreground">Admin Portal</h1>
-            <p className="text-muted-foreground mt-1">CricketCourt Management System</p>
+            <p className="text-muted-foreground mt-1">
+              Jeddah Cricket Nets Management System
+            </p>
           </div>
 
           {/* Login Form */}
@@ -47,7 +52,9 @@ const AdminLogin = () => {
                   placeholder="admin@cricket.com"
                   className="pl-10"
                   value={credentials.email}
-                  onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+                  onChange={(e) =>
+                    setCredentials({ ...credentials, email: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -61,7 +68,9 @@ const AdminLogin = () => {
                   placeholder="••••••••"
                   className="pl-10"
                   value={credentials.password}
-                  onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                  onChange={(e) =>
+                    setCredentials({ ...credentials, password: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -79,7 +88,9 @@ const AdminLogin = () => {
 
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-muted rounded-lg">
-            <p className="text-xs text-muted-foreground text-center mb-2">Demo Credentials</p>
+            <p className="text-xs text-muted-foreground text-center mb-2">
+              Demo Credentials
+            </p>
             <p className="text-sm text-foreground text-center font-mono">
               admin@cricket.com / demo123
             </p>

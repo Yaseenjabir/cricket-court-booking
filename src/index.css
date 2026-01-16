@@ -6,91 +6,91 @@
 
 @layer base {
   :root {
-    /* Cricket Court Booking System Design Tokens */
-    --background: 210 40% 98%;
-    --foreground: 222 47% 17%;
+    /* Cricket Court Booking System Design Tokens - Yellow, Green, Black Theme */
+    --background: 60 10% 96%;
+    --foreground: 0 0% 5%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 17%;
+    --card: 60 20% 98%;
+    --card-foreground: 0 0% 5%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 17%;
+    --popover: 60 20% 98%;
+    --popover-foreground: 0 0% 5%;
 
-    /* Royal Blue - Primary Brand */
-    --primary: 224 71% 40%;
-    --primary-foreground: 0 0% 100%;
+    /* Golden Yellow - Primary Brand */
+    --primary: 45 93% 47%;
+    --primary-foreground: 0 0% 5%;
 
-    /* Sky Blue - Secondary */
-    --secondary: 199 89% 48%;
+    /* Forest Green - Secondary */
+    --secondary: 142 71% 35%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 60 10% 90%;
+    --muted-foreground: 0 0% 40%;
 
-    /* Emerald Green - Accent */
-    --accent: 160 84% 39%;
-    --accent-foreground: 0 0% 100%;
+    /* Lime Green - Accent */
+    --accent: 84 81% 44%;
+    --accent-foreground: 0 0% 5%;
 
     /* Status Colors */
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 0 0% 5%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 224 71% 40%;
+    --border: 60 10% 85%;
+    --input: 60 10% 85%;
+    --ring: 45 93% 47%;
 
     --radius: 0.75rem;
 
-    /* Admin Sidebar */
-    --sidebar-background: 224 71% 15%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 224 71% 25%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 224 71% 25%;
-    --sidebar-ring: 199 89% 48%;
+    /* Admin Sidebar - Dark Black */
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 60 10% 96%;
+    --sidebar-primary: 45 93% 47%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 60 10% 96%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 45 93% 47%;
 
     /* Booking Calendar Colors */
     --slot-available: 142 71% 45%;
-    --slot-booked: 215 16% 75%;
-    --slot-weekday-day: 199 89% 48%;
-    --slot-weekday-night: 224 71% 40%;
-    --slot-weekend-day: 160 84% 39%;
-    --slot-weekend-night: 38 92% 50%;
+    --slot-booked: 0 0% 60%;
+    --slot-weekday-day: 45 93% 47%;
+    --slot-weekday-night: 0 0% 20%;
+    --slot-weekend-day: 84 81% 44%;
+    --slot-weekend-night: 142 71% 35%;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(224 71% 40%) 0%, hsl(199 89% 48%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
-    --gradient-dark: linear-gradient(135deg, hsl(224 71% 15%) 0%, hsl(222 47% 17%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 8%) 0%, hsl(0 0% 20%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(60 20% 98%) 0%, hsl(60 10% 96%) 100%);
+    --gradient-dark: linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 12%) 100%);
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 13%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 13%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 199 89% 48%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 224 71% 40%;
+    --background: 0 0% 5%;
+    --foreground: 60 10% 96%;
+    --card: 0 0% 10%;
+    --card-foreground: 60 10% 96%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 60 10% 96%;
+    --primary: 45 93% 47%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 142 71% 35%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 160 84% 39%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 199 89% 48%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 60 5% 60%;
+    --accent: 84 81% 44%;
+    --accent-foreground: 0 0% 5%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 60 10% 96%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 45 93% 47%;
   }
 }
 

@@ -23,7 +23,11 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 rounded-xl hero-gradient flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-              <Volleyball className="w-6 h-6 text-primary-foreground" />
+              <img
+                src="logo.png"
+                alt="Jeddah Cricket Nets Logo"
+                className="h-10 w-10 object-contain"
+              />{" "}
             </div>
             <span className="font-bold text-xl text-foreground">
               Jeddah Cricket Nets

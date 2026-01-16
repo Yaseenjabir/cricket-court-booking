@@ -18,7 +18,11 @@ const Footer = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-xl hero-gradient flex items-center justify-center">
-                <Volleyball className="w-6 h-6 text-primary-foreground" />
+                <img
+                  src="logo.png"
+                  alt="Jeddah Cricket Nets Logo"
+                  className="h-10 w-10 object-contain"
+                />{" "}
               </div>
               <span className="font-bold text-xl">Jeddah Cricket Nets</span>
             </div>

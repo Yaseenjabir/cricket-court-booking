@@ -43,7 +43,11 @@ const AdminSidebar = () => {
       {/* Logo */}
       <div className="p-4 flex items-center gap-3 border-b border-sidebar-border">
         <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center flex-shrink-0">
-          <Volleyball className="w-6 h-6 text-sidebar-primary-foreground" />
+          <img
+            src="logo.png"
+            alt="Jeddah Cricket Nets Logo"
+            className="h-10 w-10 object-contain"
+          />{" "}
         </div>
         {!collapsed && (
           <span className="font-bold text-lg text-sidebar-foreground">

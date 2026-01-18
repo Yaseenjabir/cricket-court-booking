@@ -88,7 +88,7 @@ const AdminPromos = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden w-full max-w-[350px] sm:max-w-none lg:w-auto">
+    <div className="flex flex-col overflow-hidden w-full">
       {/* Header - Fixed */}
       <div className="flex-shrink-0 bg-background border-b p-4 lg:p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -303,8 +303,8 @@ const AdminPromos = () => {
                               promo.status === "active"
                                 ? "text-success"
                                 : promo.status === "expired"
-                                ? "text-muted-foreground"
-                                : "text-destructive"
+                                  ? "text-muted-foreground"
+                                  : "text-destructive"
                             }`}
                           >
                             {promo.status}

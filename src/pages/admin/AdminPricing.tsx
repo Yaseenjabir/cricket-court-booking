@@ -147,7 +147,7 @@ const AdminPricing = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="flex flex-col overflow-hidden">
       {/* Header - Fixed */}
       <div className="flex-shrink-0 bg-background border-b p-4 lg:p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -183,7 +183,7 @@ const AdminPricing = () => {
       </div>
 
       {/* Content - Scrollable */}
-      <div className="flex-1 overflow-auto p-4 lg:p-6  w-full max-w-[350px] sm:max-w-none lg:w-auto">
+      <div className="flex-1 overflow-auto p-4 lg:p-6 w-full">
         {/* Price Legend */}
         <div className="bg-card rounded-xl border p-4 lg:p-6 mb-6">
           <h2 className="font-semibold text-foreground mb-4">
@@ -197,9 +197,9 @@ const AdminPricing = () => {
                   {category.includes("Weekend Night")
                     ? "135 SAR/hr"
                     : category.includes("Night") ||
-                      category.includes("Weekend Day")
-                    ? "110 SAR/hr"
-                    : "90 SAR/hr"}
+                        category.includes("Weekend Day")
+                      ? "110 SAR/hr"
+                      : "90 SAR/hr"}
                 </p>
               </div>
             ))}

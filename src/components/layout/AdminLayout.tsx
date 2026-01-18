@@ -8,7 +8,7 @@ const AdminLayout = () => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-background  h-screen">
+    <div className="flex w-full min-h-screen bg-background overflow-hidden h-screen">
       <div className="hidden lg:block ">
         <AdminSidebar />
       </div>
@@ -18,9 +18,9 @@ const AdminLayout = () => {
         onClose={() => setMobileNavOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col ">
+      <div className="flex-1 w-full flex flex-col ">
         <AdminHeader onMenuClick={() => setMobileNavOpen(true)} />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 w-full overflow-auto">
           <Outlet />
         </main>
       </div>

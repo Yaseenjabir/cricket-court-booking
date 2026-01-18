@@ -19,7 +19,7 @@ const AdminLogin = () => {
       credentials.email === "admin@cricket.com" &&
       credentials.password === "demo123"
     ) {
-      window.location.href = "/admin/dashboard";
+      window.location.href = "/admin/bookings";
     } else {
       setError("Invalid credentials. Try admin@cricket.com / demo123");
     }
@@ -32,7 +32,11 @@ const AdminLogin = () => {
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="w-16 h-16 rounded-2xl hero-gradient flex items-center justify-center mx-auto mb-4">
-              <Volleyball className="w-10 h-10 text-primary-foreground" />
+              <img
+                src="/logo.png"
+                alt="Jeddah Cricket Nets Logo"
+                className=" object-contain"
+              />{" "}
             </div>
             <h1 className="text-2xl font-bold text-foreground">Admin Portal</h1>
             <p className="text-muted-foreground mt-1">
@@ -81,7 +85,12 @@ const AdminLogin = () => {
               </div>
             )}
 
-            <Button variant="hero" size="lg" className="w-full" type="submit">
+            <Button
+              variant="hero"
+              size="lg"
+              className="w-full text-background"
+              type="submit"
+            >
               Sign In
             </Button>
           </form>

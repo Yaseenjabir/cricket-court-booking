@@ -1,8 +1,7 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
@@ -34,7 +33,7 @@
     /* Status Colors */
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
-    
+
     --warning: 45 93% 47%;
     --warning-foreground: 0 0% 5%;
 
@@ -66,9 +65,21 @@
     --slot-weekend-night: 142 71% 35%;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(0 0% 8%) 0%, hsl(0 0% 20%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(60 20% 98%) 0%, hsl(60 10% 96%) 100%);
-    --gradient-dark: linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 12%) 100%);
+    --gradient-hero: linear-gradient(
+      135deg,
+      hsl(0 0% 8%) 0%,
+      hsl(0 0% 20%) 100%
+    );
+    --gradient-card: linear-gradient(
+      145deg,
+      hsl(60 20% 98%) 0%,
+      hsl(60 10% 96%) 100%
+    );
+    --gradient-dark: linear-gradient(
+      135deg,
+      hsl(0 0% 5%) 0%,
+      hsl(0 0% 12%) 100%
+    );
   }
 
   .dark {
@@ -101,10 +112,15 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold tracking-tight;
   }
 }
@@ -198,7 +214,12 @@
   }
 
   @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
   }
 }

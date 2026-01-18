@@ -97,10 +97,10 @@ const Booking = () => {
       {/* Header */}
       <section className="hero-gradient py-12">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-background mb-2">
             Book Your Court
           </h1>
-          <p className="text-primary-foreground/80">
+          <p className="text-background/80">
             Select your preferred date, time, and court
           </p>
         </div>
@@ -110,18 +110,19 @@ const Booking = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Left Panel - Date Picker */}
           <div className="lg:col-span-1">
-            <div className="bg-card rounded-xl border p-4 sticky top-20">
+            <div className="bg-card rounded-xl border p-4 lg:sticky lg:top-20">
               <h3 className="font-semibold text-foreground mb-4">
                 Select Date
               </h3>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                disabled={(date) => date < new Date()}
-                className="rounded-md border pointer-events-auto"
-              />
-
+              <div className="flex justify-center">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  disabled={(date) => date < new Date()}
+                  className="rounded-md border pointer-events-auto"
+                />
+              </div>
               {/* Court Selector */}
               <div className="mt-6">
                 <h3 className="font-semibold text-foreground mb-3">
@@ -132,7 +133,7 @@ const Booking = () => {
                     <button
                       key={court.id}
                       onClick={() => setSelectedCourt(court.id)}
-                      className={`p-3 rounded-lg text-sm font-medium transition-colors ${
+                      className={`p-2 sm:p-3 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                         selectedCourt === court.id
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -153,17 +154,17 @@ const Booking = () => {
                   {priceCategories.map((cat, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between"
+                      className="flex items-center justify-between gap-2"
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
                         <div
-                          className={`w-4 h-4 rounded border ${cat.color}`}
+                          className={`w-4 h-4 rounded border flex-shrink-0 ${cat.color}`}
                         ></div>
-                        <span className="text-sm text-muted-foreground">
+                        <span className=" text-xs sm:text-sm text-muted-foreground truncate">
                           {cat.label}
                         </span>
                       </div>
-                      <span className="text-sm font-medium text-foreground">
+                      <span className="text-xs sm:text-sm font-medium text-foreground whitespace-nowrap">
                         {cat.price}
                       </span>
                     </div>

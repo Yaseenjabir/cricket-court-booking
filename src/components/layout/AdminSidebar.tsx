@@ -21,14 +21,14 @@ const AdminSidebar = () => {
   const location = useLocation();
 
   const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
-    { icon: Calendar, label: "Calendar", href: "/admin/calendar" },
+    // { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
+    // { icon: Calendar, label: "Calendar", href: "/admin/calendar" },
     { icon: ClipboardList, label: "Bookings", href: "/admin/bookings" },
     { icon: MapPin, label: "Courts", href: "/admin/courts" },
     { icon: DollarSign, label: "Pricing", href: "/admin/pricing" },
     { icon: Tag, label: "Promo Codes", href: "/admin/promos" },
-    { icon: BarChart3, label: "Reports", href: "/admin/reports" },
-    { icon: Settings, label: "Settings", href: "/admin/settings" },
+    // { icon: BarChart3, label: "Reports", href: "/admin/reports" },
+    // { icon: Settings, label: "Settings", href: "/admin/settings" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -36,7 +36,7 @@ const AdminSidebar = () => {
   return (
     <aside
       className={cn(
-        "min-h-screen bg-sidebar text-sidebar-foreground flex flex-col transition-all duration-300",
+        "hidden lg:flex min-h-screen bg-sidebar text-sidebar-foreground flex-col transition-all duration-300",
         collapsed ? "w-20" : "w-64"
       )}
     >
@@ -44,7 +44,7 @@ const AdminSidebar = () => {
       <div className="p-4 flex items-center gap-3 border-b border-sidebar-border">
         <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center flex-shrink-0">
           <img
-            src="logo.png"
+            src="/logo.png"
             alt="Jeddah Cricket Nets Logo"
             className="h-10 w-10 object-contain"
           />{" "}

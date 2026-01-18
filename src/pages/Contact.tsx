@@ -26,10 +26,10 @@ const Contact = () => {
       {/* Header */}
       <section className="hero-gradient py-16 md:py-24">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Contact Us
           </h1>
-          <p className="text-primary-foreground/80 text-lg max-w-2xl mx-auto">
+          <p className="text-white/80 text-lg max-w-2xl mx-auto">
             Have questions? We'd love to hear from you. Send us a message and
             we'll respond as soon as possible.
           </p>
@@ -80,7 +80,7 @@ const Contact = () => {
                     rows={5}
                   />
                 </div>
-                <Button variant="hero" size="lg" className="w-full">
+                <Button variant="hero" size="lg" className="w-full text-white">
                   Send Message
                   <Send className="w-4 h-4" />
                 </Button>

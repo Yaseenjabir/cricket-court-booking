@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { useEffect } from "react";
 
 // Layouts
 import CustomerLayout from "./components/layout/CustomerLayout";
@@ -32,6 +31,8 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminSettings from "./pages/admin/AdminSettings";
 import ScrollToTop from "./pages/ScrollToTop";
 
+import PublicRoute from "./components/routes/PublicRoute";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -54,9 +55,18 @@ const App = () => (
           </Route>
 
           {/* Admin Routes */}
+          <Route
+            path="/admin/login"
+            element={
+              <PublicRoute>
+                <AdminLogin />
+              </PublicRoute>
+            }
+          />
+
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
-            {/* <Route path="dashboard" element={<AdminDashboard />} /> */}
+            <Route path="dashboard" element={<AdminDashboard />} />
             {/* <Route path="calendar" element={<AdminCalendar />} /> */}
             <Route path="courts" element={<AdminCourts />} />
             <Route path="pricing" element={<AdminPricing />} />

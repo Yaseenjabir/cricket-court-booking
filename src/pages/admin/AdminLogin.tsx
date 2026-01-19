@@ -4,24 +4,79 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Volleyball, Lock, Mail } from "lucide-react";
+import { ADMIN_LOGIN_URL } from "@/constants/constants";
+import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminLogin = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [credentials, setCredentials] = useState({
-    email: "",
+    username: "",
     password: "",
   });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Demo validation
-    if (
-      credentials.email === "admin@cricket.com" &&
-      credentials.password === "demo123"
-    ) {
-      window.location.href = "/admin/bookings";
-    } else {
-      setError("Invalid credentials. Try admin@cricket.com / demo123");
+    setError("");
+    setLoading(true);
+
+    const API_URL = import.meta.env.VITE_API_URL;
+
+    const requestBody = {
+      username: credentials.username,
+      password: credentials.password,
+    };
+
+    try {
+      const res = await fetch(`${API_URL}${ADMIN_LOGIN_URL}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        Cookies.set("admin_token", data.data.token, { expires: 7, path: "/" });
+        Cookies.set("admin_info", JSON.stringify(data.data.admin), {
+          expires: 7,
+          path: "/",
+        });
+
+        toast({
+          title: "Success!",
+          description: data.message || "Login successful",
+          variant: "default",
+        });
+
+        setTimeout(() => {
+          navigate("/admin/dashboard");
+        }, 500);
+      } else {
+        toast({
+          title: "Login Failed",
+          description: data.message || "Invalid credentials. Please try again.",
+          variant: "destructive",
+        });
+        setError(data.message || "Invalid credentials. Please try again.");
+      }
+    } catch (err) {
+      console.error("Error details:", err);
+
+      toast({
+        title: "Connection Error",
+        description: "Unable to connect to server. Please try again.",
+        variant: "destructive",
+      });
+      setError("Connection error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -47,18 +102,20 @@ const AdminLogin = () => {
           {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="username">Username</Label>
               <div className="relative mt-1">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@cricket.com"
+                  id="username"
+                  type="text"
+                  placeholder="admin"
                   className="pl-10"
-                  value={credentials.email}
+                  value={credentials.username}
                   onChange={(e) =>
-                    setCredentials({ ...credentials, email: e.target.value })
+                    setCredentials({ ...credentials, username: e.target.value })
                   }
+                  required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -75,6 +132,8 @@ const AdminLogin = () => {
                   onChange={(e) =>
                     setCredentials({ ...credentials, password: e.target.value })
                   }
+                  required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -90,20 +149,11 @@ const AdminLogin = () => {
               size="lg"
               className="w-full text-background"
               type="submit"
+              disabled={loading}
             >
-              Sign In
+              {loading ? "Signing In..." : "Sign In"}
             </Button>
           </form>
-
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-muted rounded-lg">
-            <p className="text-xs text-muted-foreground text-center mb-2">
-              Demo Credentials
-            </p>
-            <p className="text-sm text-foreground text-center font-mono">
-              admin@cricket.com / demo123
-            </p>
-          </div>
 
           {/* Back Link */}
           <div className="text-center mt-6">

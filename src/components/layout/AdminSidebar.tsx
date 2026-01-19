@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Calendar,
@@ -15,13 +15,30 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import Cookies from "js-cookie";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out.",
+    });
+
+    Cookies.remove("admin_token", { path: "/" });
+    Cookies.remove("admin_info", { path: "/" });
+
+    setTimeout(() => {
+      window.location.href = "/admin/login";
+    }, 500);
+  };
 
   const menuItems = [
-    // { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
+    { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
     // { icon: Calendar, label: "Calendar", href: "/admin/calendar" },
     { icon: ClipboardList, label: "Bookings", href: "/admin/bookings" },
     { icon: MapPin, label: "Courts", href: "/admin/courts" },
@@ -90,13 +107,13 @@ const AdminSidebar = () => {
           )}
           {!collapsed && <span className="text-sm font-medium">Collapse</span>}
         </button>
-        <Link
-          to="/"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/70 hover:bg-destructive/20 hover:text-destructive transition-colors"
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left text-sidebar-foreground/70 hover:bg-destructive/20 hover:text-destructive transition-colors"
         >
           <LogOut className="w-5 h-5" />
           {!collapsed && <span className="text-sm font-medium">Logout</span>}
-        </Link>
+        </button>
       </div>
     </aside>
   );

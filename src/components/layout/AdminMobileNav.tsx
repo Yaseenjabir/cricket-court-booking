@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Calendar,
@@ -11,7 +11,9 @@ import {
   LogOut,
   X,
 } from "lucide-react";
+import Cookies from "js-cookie";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface AdminMobileNavProps {
   isOpen: boolean;
@@ -20,9 +22,25 @@ interface AdminMobileNavProps {
 
 const AdminMobileNav = ({ isOpen, onClose }: AdminMobileNavProps) => {
   const location = useLocation();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out.",
+    });
+
+    Cookies.remove("admin_token", { path: "/" });
+    Cookies.remove("admin_info", { path: "/" });
+    onClose();
+
+    setTimeout(() => {
+      window.location.href = "/admin/login";
+    }, 500);
+  };
 
   const menuItems = [
-    // { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
+    { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
     // { icon: Calendar, label: "Calendar", href: "/admin/calendar" },
     { icon: ClipboardList, label: "Bookings", href: "/admin/bookings" },
     { icon: MapPin, label: "Courts", href: "/admin/courts" },
@@ -96,14 +114,13 @@ const AdminMobileNav = ({ isOpen, onClose }: AdminMobileNavProps) => {
 
         {/* Bottom Actions */}
         <div className="p-3 border-t border-sidebar-border">
-          <Link
-            to="/"
-            onClick={onClose}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/70 hover:bg-destructive/20 hover:text-destructive transition-colors"
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left text-sidebar-foreground/70 hover:bg-destructive/20 hover:text-destructive transition-colors"
           >
             <LogOut className="w-5 h-5" />
             <span className="text-sm font-medium">Logout</span>
-          </Link>
+          </button>
         </div>
       </aside>
     </>

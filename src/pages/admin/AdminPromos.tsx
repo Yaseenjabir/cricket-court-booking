@@ -18,6 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Cookies from "js-cookie";
+import { PROMO_CODES_URL } from "@/constants/constants";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminPromos = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -303,8 +306,8 @@ const AdminPromos = () => {
                               promo.status === "active"
                                 ? "text-success"
                                 : promo.status === "expired"
-                                  ? "text-muted-foreground"
-                                  : "text-destructive"
+                                ? "text-muted-foreground"
+                                : "text-destructive"
                             }`}
                           >
                             {promo.status}

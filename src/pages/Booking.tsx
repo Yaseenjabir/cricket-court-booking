@@ -312,7 +312,11 @@ const Booking = () => {
                         total: calculateTotal(),
                       }}
                     >
-                      <Button variant="hero" className="w-full" size="lg">
+                      <Button
+                        variant="hero"
+                        className="w-full text-background"
+                        size="lg"
+                      >
                         Continue to Details
                       </Button>
                     </Link>

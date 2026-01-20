@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Power, Lightbulb, Wind, Tv } from "lucide-react";
+import { Plus, Edit, Power, Upload, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,208 +11,994 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import court1 from "@/assets/court-1.jpg";
-import court2 from "@/assets/court-2.jpg";
-import court3 from "@/assets/court-3.jpg";
-import court4 from "@/assets/court-4.jpg";
-import court5 from "@/assets/court-5.jpg";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import Cookies from "js-cookie";
+import {
+  COURTS_URL,
+  UPDATE_COURT_URL,
+  DELETE_COURT_URL,
+} from "@/constants/constants";
+
+// Types
+interface Court {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  status: string;
+  features: string[];
+}
+
+interface CourtFormData {
+  name: string;
+  description: string;
+  status: string;
+  features: string[];
+  image: File | null;
+}
+
+const AVAILABLE_FEATURES = [
+  "LED Lights",
+  "Air Conditioned",
+  "Bowling Machine",
+  "Video Analysis",
+  "Spectator Area",
+  "VIP Lounge",
+  "Professional Nets",
+  "Full Size",
+  "Premium Turf",
+];
 
 const AdminCourts = () => {
-  const [courts, setCourts] = useState([
-    { id: 1, name: "Court 1 - Pro Lane", image: court1, status: "active", features: ["LED Lights", "Professional Nets", "Air Conditioned"] },
-    { id: 2, name: "Court 2 - Practice Arena", image: court2, status: "active", features: ["LED Lights", "Bowling Machine", "Video Analysis"] },
-    { id: 3, name: "Court 3 - Match Court", image: court3, status: "active", features: ["Full Size", "LED Lights", "Spectator Area"] },
-    { id: 4, name: "Court 4 - Training Zone", image: court4, status: "maintenance", features: ["Multiple Wickets", "LED Lights", "Equipment Storage"] },
-    { id: 5, name: "Court 5 - Elite Court", image: court5, status: "active", features: ["Premium Turf", "LED Lights", "VIP Lounge"] },
-  ]);
+  const { toast } = useToast();
 
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingCourt, setEditingCourt] = useState<any>(null);
+  const [courts, setCourts] = useState<Court[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const toggleCourtStatus = (courtId: number) => {
-    setCourts(courts.map(court => 
-      court.id === courtId 
-        ? { ...court, status: court.status === 'active' ? 'inactive' : 'active' }
-        : court
-    ));
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createForm, setCreateForm] = useState<CourtFormData>({
+    name: "",
+    description: "",
+    status: "active",
+    features: [],
+    image: null,
+  });
+  const [createImagePreview, setCreateImagePreview] = useState("");
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingCourtId, setEditingCourtId] = useState("");
+  const [editForm, setEditForm] = useState<CourtFormData>({
+    name: "",
+    description: "",
+    status: "active",
+    features: [],
+    image: null,
+  });
+  const [editImagePreview, setEditImagePreview] = useState("");
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingCourtId, setDeletingCourtId] = useState<string | null>(null);
+
+  const [loadingStatus, setLoadingStatus] = useState<string | null>(null);
+
+  const fetchCourts = async () => {
+    setIsLoading(true);
+    const API_URL = import.meta.env.VITE_API_URL;
+    const token = Cookies.get("admin_token");
+
+    try {
+      const response = await fetch(`${API_URL}${COURTS_URL}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        const formattedCourts: Court[] = data.data.map((court: any) => ({
+          id: court.id,
+          name: court.name,
+          description: court.description,
+          image: court.imageUrl || "",
+          status: court.status,
+          features: court.features || [],
+        }));
+
+        setCourts(formattedCourts);
+      } else {
+        throw new Error(data.message || "Failed to fetch courts");
+      }
+    } catch (error) {
+      console.error("Error fetching courts:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load courts",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const featureIcons: Record<string, any> = {
-    "LED Lights": Lightbulb,
-    "Air Conditioned": Wind,
-    "Video Analysis": Tv,
+  const createCourt = async () => {
+    setIsSubmitting(true);
+    const API_URL = import.meta.env.VITE_API_URL;
+    const token = Cookies.get("admin_token");
+
+    try {
+      if (!createForm.name || !createForm.description) {
+        throw new Error("Please fill in all required fields");
+      }
+      if (!createForm.image) {
+        throw new Error("Please upload a court image");
+      }
+
+      const formData = new FormData();
+      formData.append("name", createForm.name);
+      formData.append("description", createForm.description);
+      formData.append("status", createForm.status);
+      formData.append("features", JSON.stringify(createForm.features));
+      formData.append("image", createForm.image);
+
+      const response = await fetch(`${API_URL}${COURTS_URL}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast({
+          title: "Success!",
+          description: data.message || "Court created successfully",
+        });
+
+        resetCreateForm();
+        setIsCreateModalOpen(false);
+
+        await fetchCourts();
+      } else {
+        throw new Error(data.message || "Failed to create court");
+      }
+    } catch (error: any) {
+      console.error("Error creating court:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create court",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const updateCourt = async () => {
+    setIsSubmitting(true);
+    const API_URL = import.meta.env.VITE_API_URL;
+    const token = Cookies.get("admin_token");
+
+    try {
+      if (!editForm.name || !editForm.description) {
+        throw new Error("Please fill in all required fields");
+      }
+
+      // If no new image, send as JSON
+      if (!editForm.image) {
+        const payload = {
+          name: editForm.name,
+          description: editForm.description,
+          status: editForm.status,
+          features: editForm.features,
+        };
+
+        const response = await fetch(
+          `${API_URL}${UPDATE_COURT_URL(editingCourtId)}`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          toast({
+            title: "Success!",
+            description: data.message || "Court updated successfully",
+          });
+
+          setIsEditModalOpen(false);
+          resetEditForm();
+
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          await fetchCourts();
+        } else {
+          throw new Error(data.message || "Failed to update court");
+        }
+      } else {
+        // If there's an image, use FormData
+        const formData = new FormData();
+        formData.append("name", editForm.name);
+        formData.append("description", editForm.description);
+        formData.append("status", editForm.status);
+        formData.append("features", JSON.stringify(editForm.features));
+        formData.append("image", editForm.image);
+
+        const response = await fetch(
+          `${API_URL}${UPDATE_COURT_URL(editingCourtId)}`,
+          {
+            method: "PUT",
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+          }
+        );
+
+        const data = await response.json();
+        console.log("UPDATE RESPONSE IMAGE:", data.data.imageUrl);
+        console.log("EDITING COURT ID:", editingCourtId);
+
+        if (response.ok && data.success) {
+          setCourts((prev) =>
+            prev.map((c) =>
+              c.id === editingCourtId
+                ? {
+                    ...c,
+                    name: data.data.name,
+                    description: data.data.description,
+                    status: data.data.status,
+                    features: data.data.features,
+                    image: data.data.imageUrl,
+                  }
+                : c
+            )
+          );
+          toast({
+            title: "Success!",
+            description: data.message || "Court updated successfully",
+          });
+
+          setIsEditModalOpen(false);
+          resetEditForm();
+
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          await fetchCourts();
+        } else {
+          throw new Error(data.message || "Failed to update court");
+        }
+      }
+    } catch (error: any) {
+      console.error("Error updating court:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update court",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const toggleCourtStatus = async (courtId: string) => {
+    const court = courts.find((c) => c.id === courtId);
+    if (!court) return;
+
+    const newStatus = court.status === "active" ? "inactive" : "active";
+    const API_URL = import.meta.env.VITE_API_URL;
+    const token = Cookies.get("admin_token");
+
+    // Optimistic UI update
+    setCourts((prev) =>
+      prev.map((c) => (c.id === courtId ? { ...c, status: newStatus } : c))
+    );
+    setLoadingStatus(courtId);
+
+    try {
+      const response = await fetch(`${API_URL}${UPDATE_COURT_URL(courtId)}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to update status");
+      }
+
+      toast({
+        title: "Success",
+        description: `Court status changed to ${newStatus}`,
+      });
+    } catch (error: any) {
+      // rollback UI
+      setCourts((prev) =>
+        prev.map((c) => (c.id === courtId ? { ...c, status: court.status } : c))
+      );
+
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update status",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingStatus(null);
+    }
+  };
+
+  const deleteCourt = async () => {
+    if (!deletingCourtId) return;
+
+    const API_URL = import.meta.env.VITE_API_URL;
+    const token = Cookies.get("admin_token");
+
+    try {
+      const response = await fetch(
+        `${API_URL}${DELETE_COURT_URL(deletingCourtId)}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to delete court");
+      }
+
+      setCourts((prev) => prev.filter((court) => court.id !== deletingCourtId));
+
+      toast({
+        title: "Court Deleted",
+        description: "Court has been deleted successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete court",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleteModalOpen(false);
+      setDeletingCourtId(null);
+    }
+  };
+
+  const resetCreateForm = () => {
+    setCreateForm({
+      name: "",
+      description: "",
+      status: "active",
+      features: [],
+      image: null,
+    });
+    setCreateImagePreview("");
+  };
+
+  const resetEditForm = () => {
+    setEditForm({
+      name: "",
+      description: "",
+      status: "active",
+      features: [],
+      image: null,
+    });
+    setEditImagePreview("");
+    setEditingCourtId("");
+  };
+
+  const handleCreateImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCreateForm({ ...createForm, image: file });
+      const reader = new FileReader();
+      reader.onloadend = () => setCreateImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEditForm({ ...editForm, image: file });
+      const reader = new FileReader();
+      reader.onloadend = () => setEditImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const toggleCreateFeature = (feature: string) => {
+    setCreateForm((prev) => ({
+      ...prev,
+      features: prev.features.includes(feature)
+        ? prev.features.filter((f) => f !== feature)
+        : [...prev.features, feature],
+    }));
+  };
+
+  const toggleEditFeature = (feature: string) => {
+    setEditForm((prev) => ({
+      ...prev,
+      features: prev.features.includes(feature)
+        ? prev.features.filter((f) => f !== feature)
+        : [...prev.features, feature],
+    }));
+  };
+
+  const openEditModal = (court: Court) => {
+    setEditingCourtId(court.id);
+    setEditForm({
+      name: court.name,
+      description: court.description,
+      status: court.status,
+      features: [...court.features],
+      image: null,
+    });
+    setEditImagePreview(court.image);
+    setIsEditModalOpen(true);
+  };
+
+  useEffect(() => {
+    fetchCourts();
+  }, []);
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="h-screen flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Court Management</h1>
-          <p className="text-muted-foreground">Manage all cricket courts and their configurations</p>
-        </div>
-        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-          <DialogTrigger asChild>
-            <Button variant="default">
-              <Plus className="w-4 h-4" />
-              Add New Court
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add New Court</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div>
-                <Label htmlFor="courtName">Court Name</Label>
-                <Input id="courtName" placeholder="e.g., Court 6 - Premium Lane" />
-              </div>
-              <div>
-                <Label htmlFor="courtDescription">Description</Label>
-                <Input id="courtDescription" placeholder="Brief description of the court" />
-              </div>
-              <div>
-                <Label>Features</Label>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {["LED Lights", "Air Conditioned", "Bowling Machine", "Video Analysis", "Spectator Area", "VIP Lounge"].map((feature) => (
-                    <label key={feature} className="flex items-center gap-2 p-2 rounded-lg border cursor-pointer hover:bg-muted/50">
-                      <input type="checkbox" className="rounded" />
-                      <span className="text-sm">{feature}</span>
-                    </label>
-                  ))}
+      <div className="flex-shrink-0 bg-background border-b p-4 lg:p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">
+              Court Management
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Manage all cricket courts and their configurations
+            </p>
+          </div>
+
+          {/* Create Court Button */}
+          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="default" size="sm">
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline ml-1">Add New Court</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New Court</DialogTitle>
+              </DialogHeader>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  createCourt();
+                }}
+                className="space-y-4 pt-4"
+              >
+                {/* Court Name */}
+                <div>
+                  <Label htmlFor="createName">
+                    Court Name <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="createName"
+                    placeholder="e.g., Court 6 - Premium Lane"
+                    value={createForm.name}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, name: e.target.value })
+                    }
+                    disabled={isSubmitting}
+                  />
                 </div>
-              </div>
+
+                {/* Description */}
+                <div>
+                  <Label htmlFor="createDescription">
+                    Description <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="createDescription"
+                    placeholder="Brief description of the court"
+                    value={createForm.description}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        description: e.target.value,
+                      })
+                    }
+                    disabled={isSubmitting}
+                  />
+                </div>
+
+                {/* Status */}
+                <div>
+                  <Label htmlFor="createStatus">Status</Label>
+                  <Select
+                    value={createForm.status}
+                    onValueChange={(value) =>
+                      setCreateForm({ ...createForm, status: value })
+                    }
+                    disabled={isSubmitting}
+                  >
+                    <SelectTrigger id="createStatus">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Image Upload */}
+                <div>
+                  <Label htmlFor="createImage">
+                    Court Image <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="mt-2">
+                    {createImagePreview ? (
+                      <div className="relative">
+                        <img
+                          src={createImagePreview}
+                          alt="Preview"
+                          className="w-full h-40 object-cover rounded-lg"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={() => {
+                            setCreateForm({ ...createForm, image: null });
+                            setCreateImagePreview("");
+                          }}
+                          disabled={isSubmitting}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ) : (
+                      <label
+                        htmlFor="createImage"
+                        className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-muted rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                      >
+                        <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                        <span className="text-sm text-muted-foreground">
+                          Click to upload image
+                        </span>
+                        <input
+                          id="createImage"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleCreateImageChange}
+                          disabled={isSubmitting}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                {/* Features */}
+                <div>
+                  <Label>Features</Label>
+                  <div className="grid grid-cols-2 gap-2 mt-2 max-h-40 overflow-y-auto">
+                    {AVAILABLE_FEATURES.map((feature) => (
+                      <label
+                        key={feature}
+                        className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors ${
+                          createForm.features.includes(feature)
+                            ? "bg-primary/10 border-primary"
+                            : "hover:bg-muted/50"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={createForm.features.includes(feature)}
+                          onChange={() => toggleCreateFeature(feature)}
+                          disabled={isSubmitting}
+                        />
+                        <span className="text-sm">{feature}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {createForm.features.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {createForm.features.length} feature(s) selected
+                  </p>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="submit"
+                    variant="default"
+                    className="flex-1"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Creating..." : "Create Court"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setIsCreateModalOpen(false);
+                      resetCreateForm();
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Delete Court</DialogTitle>
+              </DialogHeader>
+
+              <p className="text-sm text-muted-foreground">
+                Are you sure you want to delete this court? This action cannot
+                be undone.
+              </p>
+
               <div className="flex gap-3 pt-4">
-                <Button variant="default" className="flex-1">Save Court</Button>
-                <Button variant="outline" className="flex-1" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
+                <Button
+                  variant="destructive"
+                  className="flex-1"
+                  onClick={deleteCourt}
+                >
+                  Delete
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setIsDeleteModalOpen(false)}
+                >
+                  Cancel
+                </Button>
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {/* Courts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {courts.map((court) => (
-          <div key={court.id} className="bg-card rounded-xl border overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="relative h-40">
-              <img src={court.image} alt={court.name} className="w-full h-full object-cover" />
-              <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium ${
-                court.status === 'active' ? 'bg-success text-success-foreground' :
-                court.status === 'maintenance' ? 'bg-warning text-warning-foreground' :
-                'bg-muted text-muted-foreground'
-              }`}>
-                {court.status === 'active' ? 'Active' : court.status === 'maintenance' ? 'Maintenance' : 'Inactive'}
+      {/* Edit Court Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Court</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              updateCourt();
+            }}
+            className="space-y-4 pt-4"
+          >
+            {/* Court Name */}
+            <div>
+              <Label htmlFor="editName">
+                Court Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="editName"
+                value={editForm.name}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, name: e.target.value })
+                }
+                disabled={isSubmitting}
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <Label htmlFor="editDescription">
+                Description <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="editDescription"
+                value={editForm.description}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, description: e.target.value })
+                }
+                disabled={isSubmitting}
+              />
+            </div>
+
+            {/* Status */}
+            <div>
+              <Label htmlFor="editStatus">Status</Label>
+              <Select
+                value={editForm.status}
+                onValueChange={(value) =>
+                  setEditForm({ ...editForm, status: value })
+                }
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id="editStatus">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Image Upload */}
+            <div>
+              <Label htmlFor="editImage">
+                Court Image (Optional - leave blank to keep current)
+              </Label>
+              <div className="mt-2">
+                {editImagePreview ? (
+                  <div className="relative">
+                    <img
+                      src={editImagePreview}
+                      alt="Preview"
+                      className="w-full h-40 object-cover rounded-lg"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={() => {
+                        setEditForm({ ...editForm, image: null });
+                        setEditImagePreview("");
+                      }}
+                      disabled={isSubmitting}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <label
+                    htmlFor="editImage"
+                    className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-muted rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                  >
+                    <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                    <span className="text-sm text-muted-foreground">
+                      Click to upload new image
+                    </span>
+                    <input
+                      id="editImage"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleEditImageChange}
+                      disabled={isSubmitting}
+                    />
+                  </label>
+                )}
               </div>
             </div>
-            <div className="p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-semibold text-foreground">{court.name}</h3>
-                  <p className="text-sm text-muted-foreground">Court ID: #{court.id}</p>
-                </div>
-              </div>
-              
-              <div className="flex flex-wrap gap-2 mb-4">
-                {court.features.map((feature, index) => (
-                  <span key={index} className="px-2 py-1 text-xs font-medium bg-muted rounded-md text-muted-foreground">
-                    {feature}
-                  </span>
+
+            {/* Features */}
+            <div>
+              <Label>Features</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2 max-h-40 overflow-y-auto">
+                {AVAILABLE_FEATURES.map((feature) => (
+                  <label
+                    key={feature}
+                    className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors ${
+                      editForm.features.includes(feature)
+                        ? "bg-primary/10 border-primary"
+                        : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="rounded"
+                      checked={editForm.features.includes(feature)}
+                      onChange={() => toggleEditFeature(feature)}
+                      disabled={isSubmitting}
+                    />
+                    <span className="text-sm">{feature}</span>
+                  </label>
                 ))}
               </div>
+            </div>
 
-              <div className="flex items-center justify-between pt-3 border-t">
-                <div className="flex items-center gap-2">
-                  <Switch 
-                    checked={court.status === 'active'}
-                    onCheckedChange={() => toggleCourtStatus(court.id)}
-                  />
-                  <span className="text-sm text-muted-foreground">
-                    {court.status === 'active' ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={() => setEditingCourt(court)}>
-                        <Edit className="w-4 h-4" />
-                        Edit
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Edit Court</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 pt-4">
-                        <div>
-                          <Label htmlFor="editCourtName">Court Name</Label>
-                          <Input id="editCourtName" defaultValue={court.name} />
-                        </div>
-                        <div>
-                          <Label>Status</Label>
-                          <div className="flex gap-2 mt-2">
-                            <Button variant={court.status === 'active' ? 'default' : 'outline'} size="sm">Active</Button>
-                            <Button variant={court.status === 'maintenance' ? 'warning' : 'outline'} size="sm">Maintenance</Button>
-                            <Button variant={court.status === 'inactive' ? 'destructive' : 'outline'} size="sm">Inactive</Button>
-                          </div>
-                        </div>
-                        <div>
-                          <Label>Features</Label>
-                          <div className="grid grid-cols-2 gap-2 mt-2">
-                            {["LED Lights", "Air Conditioned", "Bowling Machine", "Video Analysis", "Spectator Area", "VIP Lounge"].map((feature) => (
-                              <label key={feature} className="flex items-center gap-2 p-2 rounded-lg border cursor-pointer hover:bg-muted/50">
-                                <input type="checkbox" className="rounded" defaultChecked={court.features.includes(feature)} />
-                                <span className="text-sm">{feature}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="flex gap-3 pt-4">
-                          <Button variant="default" className="flex-1">Save Changes</Button>
-                          <Button variant="outline" className="flex-1">Cancel</Button>
-                        </div>
+            {editForm.features.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {editForm.features.length} feature(s) selected
+              </p>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="submit"
+                variant="default"
+                className="flex-1"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Updating..." : "Update Court"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  resetEditForm();
+                }}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Courts Grid */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="p-4 lg:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {isLoading ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">Loading courts...</p>
+              </div>
+            ) : courts.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">No courts found</p>
+              </div>
+            ) : (
+              courts.map((court) => (
+                <div
+                  key={court.id}
+                  className="bg-card rounded-xl border overflow-hidden hover:shadow-lg transition-shadow"
+                >
+                  <div className="relative h-40">
+                    {court.image && (
+                      <img
+                        src={court.image}
+                        alt={court.name}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    <div
+                      className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium ${
+                        court.status === "active"
+                          ? "bg-success text-success-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {court.status === "active" ? "Active" : "Inactive"}
+                    </div>
+                  </div>
+
+                  <div className="p-5">
+                    <div className="mb-3">
+                      <h3 className="font-semibold text-foreground">
+                        {court.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {court.description}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {court.features.map((feature, idx) => (
+                        <span
+                          key={`${court.id}-${feature}-${idx}`}
+                          className="px-2 py-1 text-xs font-medium bg-muted rounded-md text-muted-foreground"
+                        >
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={court.status === "active"}
+                          onCheckedChange={() => toggleCourtStatus(court.id)}
+                          disabled={loadingStatus === court.id} // optional: prevent spamming
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {court.status === "active" ? "Active" : "Inactive"}
+                        </span>
                       </div>
-                    </DialogContent>
-                  </Dialog>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditModal(court)}
+                        >
+                          <Edit className="w-4 h-4" />
+                          <span className="hidden sm:inline ml-1">Edit</span>
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            setDeletingCourtId(court.id);
+                            setIsDeleteModalOpen(true);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span className="hidden sm:inline ml-1">Delete</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-card rounded-xl border p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
+                  <Power className="w-6 h-6 text-success" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">
+                    {courts.filter((c) => c.status === "active").length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Active Courts</p>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <div className="bg-card rounded-xl border p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
-              <Power className="w-6 h-6 text-success" />
+            <div className="bg-card rounded-xl border p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
+                  <Power className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">
+                    {courts.filter((c) => c.status === "inactive").length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Inactive Courts
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{courts.filter(c => c.status === 'active').length}</p>
-              <p className="text-sm text-muted-foreground">Active Courts</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card rounded-xl border p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
-              <Power className="w-6 h-6 text-warning" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{courts.filter(c => c.status === 'maintenance').length}</p>
-              <p className="text-sm text-muted-foreground">Under Maintenance</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card rounded-xl border p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
-              <Power className="w-6 h-6 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{courts.filter(c => c.status === 'inactive').length}</p>
-              <p className="text-sm text-muted-foreground">Inactive Courts</p>
+
+            <div className="bg-card rounded-xl border p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Power className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">
+                    {courts.length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Total Courts</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

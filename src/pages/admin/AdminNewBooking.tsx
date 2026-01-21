@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import {
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -357,7 +356,6 @@ const AdminNewBooking = () => {
           <div className="bg-card rounded-xl border p-6">
             <h2 className="font-semibold text-foreground mb-4">Date & Time</h2>
 
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label>Select Date</Label>
@@ -446,7 +444,6 @@ const AdminNewBooking = () => {
           {/* Admin Notes */}
           <div className="bg-card rounded-xl border p-6">
             <h2 className="font-semibold text-foreground mb-4">Admin Notes</h2>
-            <Textarea
             <Textarea
               placeholder="Add any internal notes about this booking..."
               rows={3}

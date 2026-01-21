@@ -1,0 +1,221 @@
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+import Cookies from "js-cookie";
+import {
+  Court,
+  Pricing,
+  Booking,
+  BookingCreateData,
+  PromoCode,
+  PromoCodeCreateData,
+} from "@/types/booking.types";
+
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+}
+
+// Generic API call function
+async function apiCall<T>(
+  endpoint: string,
+  options?: RequestInit,
+): Promise<ApiResponse<T>> {
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "API request failed");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("API Error:", error);
+    throw error;
+  }
+}
+
+// Generic API call function for admin routes (with authentication)
+async function adminApiCall<T>(
+  endpoint: string,
+  options?: RequestInit,
+): Promise<ApiResponse<T>> {
+  const token = Cookies.get("admin_token");
+
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options?.headers,
+      },
+    });
+
+    console.log("Admin API Call Response:", response);
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "API request failed");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("API Error:", error);
+    throw error;
+  }
+}
+
+// Court APIs
+export const courtApi = {
+  getAll: () => apiCall<Court[]>("/courts"),
+  getById: (id: string) => apiCall<Court>(`/courts/${id}`),
+};
+
+// Pricing APIs
+export const pricingApi = {
+  getAll: () => apiCall<Pricing[]>("/pricing"),
+  getCurrent: () => apiCall<Pricing>("/pricing/current"),
+};
+
+// Booking APIs
+export const bookingApi = {
+  checkAvailability: (params: {
+    courtId: string;
+    bookingDate: string;
+    startTime: string;
+    endTime: string;
+  }) =>
+    apiCall<{ available: boolean; conflictingBookings?: Booking[] }>(
+      "/bookings/availability",
+      {
+        method: "POST",
+        body: JSON.stringify(params),
+      },
+    ),
+
+  create: (data: BookingCreateData) =>
+    apiCall<Booking>("/bookings", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getById: (id: string) => apiCall<Booking>(`/bookings/${id}`),
+};
+
+// Promo Code APIs
+export const promoCodeApi = {
+  validate: (data: {
+    code: string;
+    customerPhone: string;
+    bookingAmount: number;
+  }) =>
+    apiCall<{
+      valid: boolean;
+      discount: number;
+      finalAmount: number;
+      message?: string;
+    }>("/promo-codes/validate", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
+
+// Admin APIs (authenticated)
+export const adminApi = {
+  // Courts
+  courts: {
+    getAll: () => adminApiCall<Court[]>("/courts"),
+    getById: (id: string) => adminApiCall<Court>(`/courts/${id}`),
+    create: (data: FormData) =>
+      adminApiCall<Court>("/courts", {
+        method: "POST",
+        body: data,
+        headers: {}, // FormData sets its own Content-Type
+      }),
+    update: (id: string, data: FormData) =>
+      adminApiCall<Court>(`/courts/${id}`, {
+        method: "PUT",
+        body: data,
+        headers: {}, // FormData sets its own Content-Type
+      }),
+    delete: (id: string) =>
+      adminApiCall<{ message: string }>(`/courts/${id}`, {
+        method: "DELETE",
+      }),
+  },
+
+  // Bookings
+  bookings: {
+    getAll: () => adminApiCall<Booking[]>("/bookings"),
+    getById: (id: string) => adminApiCall<Booking>(`/bookings/${id}`),
+    cancel: (id: string) =>
+      adminApiCall<Booking>(`/bookings/${id}/cancel`, {
+        method: "PATCH",
+      }),
+    createManual: (data: {
+      courtId: string;
+      bookingDate: string;
+      startTime: string;
+      endTime: string;
+      customerPhone?: string;
+      customerName?: string;
+      customerEmail?: string;
+      notes?: string;
+      isBlocked?: boolean;
+    }) =>
+      adminApiCall<Booking>("/bookings/manual", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+  },
+
+  // Pricing
+  pricing: {
+    getAll: () => adminApiCall<Pricing[]>("/pricing"),
+    getCurrent: () => adminApiCall<Pricing>("/pricing/current"),
+    create: (data: Omit<Pricing, "_id" | "createdAt" | "updatedAt">) =>
+      adminApiCall<Pricing>("/pricing", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<Pricing>) =>
+      adminApiCall<Pricing>(`/pricing/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+  },
+
+  // Promo Codes
+  promoCodes: {
+    getAll: () => adminApiCall<PromoCode[]>("/promo-codes"),
+    create: (data: PromoCodeCreateData) =>
+      adminApiCall<PromoCode>("/promo-codes", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<PromoCodeCreateData>) =>
+      adminApiCall<PromoCode>(`/promo-codes/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      adminApiCall<{ message: string }>(`/promo-codes/${id}`, {
+        method: "DELETE",
+      }),
+    toggleStatus: (id: string) =>
+      adminApiCall<PromoCode>(`/promo-codes/${id}/toggle`, {
+        method: "PATCH",
+      }),
+  },
+};

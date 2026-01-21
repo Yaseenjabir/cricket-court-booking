@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Calendar, Clock, MapPin, Tag, CheckCircle, Percent } from "lucide-react";
+import { Calendar, Clock, MapPin, Tag, CheckCircle, Percent, Loader2, X, Info } from "lucide-react";
 import { format } from "date-fns";
+import { promoCodeApi } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const BookingDetails = () => {
   const location = useLocation();
@@ -16,9 +18,16 @@ const BookingDetails = () => {
     total: 330,
   };
 
+  const { toast } = useToast();
   const [paymentOption, setPaymentOption] = useState("full");
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoData, setPromoData] = useState<{
+    discount: number;
+    finalAmount: number;
+    message?: string;
+  } | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -28,14 +37,75 @@ const BookingDetails = () => {
 
   const baseTotal = bookingData.total || 330;
   const discount = paymentOption === "full" ? baseTotal * 0.02 : 0;
-  const promoDiscount = promoApplied ? baseTotal * 0.1 : 0;
+  const promoDiscount = promoApplied && promoData ? promoData.discount : 0;
   const finalTotal = baseTotal - discount - promoDiscount;
   const amountNow = paymentOption === "full" ? finalTotal : finalTotal * 0.5;
 
-  const handleApplyPromo = () => {
-    if (promoCode.toUpperCase() === "CRICKET10") {
-      setPromoApplied(true);
+  // Check if phone is valid (Saudi format)
+  const isPhoneValid = formData.phone.trim() && /^(\+966|05)[0-9]{8,9}$/.test(formData.phone.replace(/\s/g, ''));
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a promo code",
+        variant: "destructive",
+      });
+      return;
     }
+
+    // Validate phone number first
+    if (!isPhoneValid) {
+      toast({
+        title: "Phone Required",
+        description: "Please enter a valid phone number to apply promo codes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setPromoLoading(true);
+    try {
+      const response = await promoCodeApi.validate({
+        code: promoCode,
+        customerPhone: formData.phone,
+        bookingAmount: baseTotal - discount, // Apply promo after payment discount
+      });
+
+      if (response.data?.valid) {
+        setPromoApplied(true);
+        setPromoData({
+          discount: response.data.discount,
+          finalAmount: response.data.finalAmount,
+          message: response.data.message,
+        });
+        toast({
+          title: "Success!",
+          description: response.data.message || `Promo code applied! You saved ${response.data.discount} SAR`,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Invalid Promo Code",
+          description: response.data?.message || "This promo code is not valid",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to validate promo code",
+        variant: "destructive",
+      });
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setPromoApplied(false);
+    setPromoData(null);
+    setPromoCode("");
   };
 
   const validateForm = () => {
@@ -216,34 +286,48 @@ const BookingDetails = () => {
                       placeholder="Enter promo code"
                       className="pl-10"
                       value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                      disabled={promoApplied}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      disabled={promoApplied || promoLoading}
                     />
                   </div>
-                  <Button 
-                    variant={promoApplied ? "success" : "outline"} 
-                    onClick={handleApplyPromo}
-                    disabled={promoApplied}
-                  >
-                    {promoApplied ? (
-                      <>
-                        <CheckCircle className="w-4 h-4" />
-                        Applied
-                      </>
-                    ) : (
-                      "Apply"
-                    )}
-                  </Button>
+                  {promoApplied ? (
+                    <Button 
+                      variant="outline" 
+                      onClick={handleRemovePromo}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <X className="w-4 h-4" />
+                      Remove
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant={promoApplied ? "success" : "outline"} 
+                      onClick={handleApplyPromo}
+                      disabled={promoLoading || !promoCode.trim()}
+                    >
+                      {promoLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Checking...
+                        </>
+                      ) : (
+                        "Apply"
+                      )}
+                    </Button>
+                  )}
                 </div>
-                {promoApplied && (
+                {promoApplied && promoData && (
                   <p className="text-sm text-success mt-2 flex items-center gap-1">
-                    <Percent className="w-4 h-4" />
-                    10% discount applied! You save {promoDiscount.toFixed(0)} SAR
+                    <CheckCircle className="w-4 h-4" />
+                    {promoData.message || `You saved ${promoDiscount.toFixed(0)} SAR`}
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground mt-2">
-                  Try: CRICKET10 for 10% off
-                </p>
+                {!isPhoneValid && !promoApplied && (
+                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                    <Info className="w-3 h-3" />
+                    Enter your phone number above to apply promo codes
+                  </p>
+                )}
               </div>
             </div>
 
@@ -278,9 +362,9 @@ const BookingDetails = () => {
                       <span>-{discount.toFixed(0)} SAR</span>
                     </div>
                   )}
-                  {promoApplied && (
+                  {promoApplied && promoData && (
                     <div className="flex justify-between text-sm text-success">
-                      <span>Promo Code (10%)</span>
+                      <span>Promo Code ({promoCode})</span>
                       <span>-{promoDiscount.toFixed(0)} SAR</span>
                     </div>
                   )}

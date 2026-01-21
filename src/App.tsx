@@ -21,16 +21,12 @@ import NotFound from "./pages/NotFound";
 // Admin Pages
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminCalendar from "./pages/admin/AdminCalendar";
 import AdminCourts from "./pages/admin/AdminCourts";
 import AdminPricing from "./pages/admin/AdminPricing";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminNewBooking from "./pages/admin/AdminNewBooking";
 import AdminPromos from "./pages/admin/AdminPromos";
-import AdminReports from "./pages/admin/AdminReports";
-import AdminSettings from "./pages/admin/AdminSettings";
 import ScrollToTop from "./pages/ScrollToTop";
-
 import PublicRoute from "./components/routes/PublicRoute";
 
 const queryClient = new QueryClient();

@@ -45,6 +45,21 @@ interface CourtFormData {
   image: File | null;
 }
 
+interface ApiCourt {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl: string;
+  status: string;
+  features: string[];
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+}
+
 const AVAILABLE_FEATURES = [
   "LED Lights",
   "Air Conditioned",
@@ -100,10 +115,10 @@ const AdminCourts = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as ApiResponse<ApiCourt[]>;
 
       if (response.ok && data.success) {
-        const formattedCourts: Court[] = data.data.map((court: any) => ({
+        const formattedCourts: Court[] = data.data.map((court: ApiCourt) => ({
           id: court.id,
           name: court.name,
           description: court.description,
@@ -154,7 +169,7 @@ const AdminCourts = () => {
         body: formData,
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as ApiResponse<ApiCourt>;
 
       if (response.ok && data.success) {
         toast({
@@ -169,11 +184,12 @@ const AdminCourts = () => {
       } else {
         throw new Error(data.message || "Failed to create court");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error creating court:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create court",
+        description:
+          error instanceof Error ? error.message : "Failed to create court",
         variant: "destructive",
       });
     } finally {
@@ -209,10 +225,10 @@ const AdminCourts = () => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify(payload),
-          }
+          },
         );
 
-        const data = await response.json();
+        const data = (await response.json()) as ApiResponse<ApiCourt>;
 
         if (response.ok && data.success) {
           toast({
@@ -243,10 +259,10 @@ const AdminCourts = () => {
             method: "PUT",
             headers: { Authorization: `Bearer ${token}` },
             body: formData,
-          }
+          },
         );
 
-        const data = await response.json();
+        const data = (await response.json()) as ApiResponse<ApiCourt>;
 
         if (response.ok && data.success) {
           setCourts((prev) =>
@@ -260,8 +276,8 @@ const AdminCourts = () => {
                     features: data.data.features,
                     image: `${data.data.imageUrl}?t=${Date.now()}`,
                   }
-                : c
-            )
+                : c,
+            ),
           );
           toast({
             title: "Success!",
@@ -274,11 +290,12 @@ const AdminCourts = () => {
           throw new Error(data.message || "Failed to update court");
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error updating court:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to update court",
+        description:
+          error instanceof Error ? error.message : "Failed to update court",
         variant: "destructive",
       });
     } finally {
@@ -296,7 +313,7 @@ const AdminCourts = () => {
 
     // Optimistic UI update
     setCourts((prev) =>
-      prev.map((c) => (c.id === courtId ? { ...c, status: newStatus } : c))
+      prev.map((c) => (c.id === courtId ? { ...c, status: newStatus } : c)),
     );
     setLoadingStatus(courtId);
 
@@ -310,7 +327,7 @@ const AdminCourts = () => {
         body: JSON.stringify({ status: newStatus }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as ApiResponse<ApiCourt>;
 
       if (!response.ok || !data.success) {
         throw new Error(data.message || "Failed to update status");
@@ -320,15 +337,18 @@ const AdminCourts = () => {
         title: "Success",
         description: `Court status changed to ${newStatus}`,
       });
-    } catch (error: any) {
+    } catch (error) {
       // rollback UI
       setCourts((prev) =>
-        prev.map((c) => (c.id === courtId ? { ...c, status: court.status } : c))
+        prev.map((c) =>
+          c.id === courtId ? { ...c, status: court.status } : c,
+        ),
       );
 
       toast({
         title: "Error",
-        description: error.message || "Failed to update status",
+        description:
+          error instanceof Error ? error.message : "Failed to update status",
         variant: "destructive",
       });
     } finally {
@@ -350,10 +370,10 @@ const AdminCourts = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
-      const data = await response.json();
+      const data = (await response.json()) as ApiResponse<null>;
 
       if (!response.ok || !data.success) {
         throw new Error(data.message || "Failed to delete court");
@@ -365,10 +385,11 @@ const AdminCourts = () => {
         title: "Court Deleted",
         description: "Court has been deleted successfully",
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Failed to delete court",
+        description:
+          error instanceof Error ? error.message : "Failed to delete court",
         variant: "destructive",
       });
     } finally {
@@ -855,7 +876,7 @@ const AdminCourts = () => {
       </Dialog>
 
       {/* Courts Grid */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+      <div className="flex-1 overflow-y-auto bg-background">
         <div className="p-4 lg:p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {isLoading ? (

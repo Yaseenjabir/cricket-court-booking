@@ -105,10 +105,10 @@ const BookingDetails = () => {
           variant: "destructive",
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
-        description: error.message || "Failed to validate promo code",
+        description: error instanceof Error ? error.message : "Failed to validate promo code",
         variant: "destructive",
       });
     } finally {

@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Search, ArrowLeft, Check, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { adminApi, pricingApi } from "@/lib/api";
+import { adminApi, pricingApi, bookingApi } from "@/lib/api";
 import { Court, Pricing, TimeSlot } from "@/types/booking.types";
 
 const AdminNewBooking = () => {
@@ -45,6 +45,8 @@ const AdminNewBooking = () => {
   const [courts, setCourts] = useState<Court[]>([]);
   const [pricing, setPricing] = useState<Pricing | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   // Fetch courts on mount
   useEffect(() => {
@@ -101,9 +103,84 @@ const AdminNewBooking = () => {
   useEffect(() => {
     if (selectedCourt && pricing) {
       generateTimeSlots();
+      fetchBookedSlots();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCourt, selectedDate, pricing]);
+
+  // Clear selected slots when court changes
+  useEffect(() => {
+    if (selectedSlots.length > 0) {
+      setSelectedSlots([]);
+      toast({
+        title: "Court Changed",
+        description:
+          "You can only book slots for one court at a time. Previous selections cleared.",
+        variant: "default",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCourt]);
+
+  // Fetch booked slots for selected court and date
+  const fetchBookedSlots = async () => {
+    if (!selectedCourt || !selectedDate) return;
+
+    try {
+      setLoadingSlots(true);
+      const formattedDate = format(selectedDate, "yyyy-MM-dd");
+
+      // Get all time slots to check
+      const slotsToCheck: string[] = [];
+
+      // 9 AM to 11 PM
+      for (let hour = 9; hour < 24; hour++) {
+        slotsToCheck.push(`${hour.toString().padStart(2, "0")}:00`);
+      }
+
+      // 12 AM to 4 AM (next day)
+      for (let hour = 0; hour < 4; hour++) {
+        slotsToCheck.push(`${hour.toString().padStart(2, "0")}:00`);
+      }
+
+      // Check each slot for conflicts
+      const booked = new Set<string>();
+
+      for (const slot of slotsToCheck) {
+        const [hour] = slot.split(":").map(Number);
+        const endHour = hour + 1;
+        const endTime = `${endHour.toString().padStart(2, "0")}:00`;
+
+        try {
+          const response = await bookingApi.checkAvailability({
+            courtId: selectedCourt,
+            bookingDate: formattedDate,
+            startTime: slot,
+            endTime,
+          });
+
+          console.log("Availability response:", response);
+
+          if (!response.data?.available) {
+            booked.add(slot);
+          }
+        } catch (error) {
+          console.error(`Failed to check availability for ${slot}:`, error);
+        }
+      }
+
+      setBookedSlots(booked);
+    } catch (error) {
+      console.error("Failed to fetch booked slots:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load booked slots",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
 
   // Generate time slots from 9 AM to 4 AM (next day)
   const generateTimeSlots = () => {
@@ -156,10 +233,63 @@ const AdminNewBooking = () => {
   };
 
   const toggleSlot = (time: string) => {
+    // Check if slot is already booked
+    if (bookedSlots.has(time)) {
+      toast({
+        title: "Slot Unavailable",
+        description: "This time slot is already booked",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // If deselecting
     if (selectedSlots.includes(time)) {
       setSelectedSlots(selectedSlots.filter((t) => t !== time));
+      return;
+    }
+
+    // If first slot, allow selection
+    if (selectedSlots.length === 0) {
+      setSelectedSlots([time]);
+      return;
+    }
+
+    // Check if the new slot is consecutive
+    const allSlotTimes = timeSlots.map((s) => s.time);
+    const currentIndices = selectedSlots
+      .map((t) => allSlotTimes.indexOf(t))
+      .sort((a, b) => a - b);
+    const newIndex = allSlotTimes.indexOf(time);
+
+    const minIndex = Math.min(...currentIndices);
+    const maxIndex = Math.max(...currentIndices);
+
+    // Only allow if the new slot is immediately before or after the current range
+    if (newIndex === minIndex - 1 || newIndex === maxIndex + 1) {
+      // Check if there are any booked slots between the selected range
+      const rangeStart = Math.min(minIndex, newIndex);
+      const rangeEnd = Math.max(maxIndex, newIndex);
+      const hasBookedInRange = allSlotTimes
+        .slice(rangeStart, rangeEnd + 1)
+        .some((slotTime) => bookedSlots.has(slotTime));
+
+      if (hasBookedInRange) {
+        toast({
+          title: "Invalid Selection",
+          description: "Cannot select slots with booked slots in between",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setSelectedSlots([...selectedSlots, time].sort());
     } else {
-      setSelectedSlots([...selectedSlots, time]);
+      toast({
+        title: "Invalid Selection",
+        description: "Please select consecutive time slots only",
+        variant: "destructive",
+      });
     }
   };
 
@@ -416,26 +546,45 @@ const AdminNewBooking = () => {
                 <div className="flex justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin" />
                 </div>
+              ) : loadingSlots ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <span className="ml-2 text-sm text-muted-foreground">
+                    Loading availability...
+                  </span>
+                </div>
               ) : (
                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                  {timeSlots.map((slot, index) => (
-                    <button
-                      key={index}
-                      onClick={() => toggleSlot(slot.time)}
-                      className={`p-2 rounded-lg text-sm font-medium transition-all border ${
-                        selectedSlots.includes(slot.time)
-                          ? "bg-primary border-primary text-primary-foreground"
-                          : "bg-muted/50 border-muted hover:bg-muted text-foreground"
-                      }`}
-                    >
-                      <div>{slot.display}</div>
-                      {!isBlocked && (
-                        <div className="text-xs mt-1 opacity-70">
-                          {slot.price} SAR
-                        </div>
-                      )}
-                    </button>
-                  ))}
+                  {timeSlots.map((slot, index) => {
+                    const isBooked = bookedSlots.has(slot.time);
+                    const isSelected = selectedSlots.includes(slot.time);
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => toggleSlot(slot.time)}
+                        disabled={isBooked}
+                        className={`p-2 rounded-lg text-sm font-medium transition-all border ${
+                          isBooked
+                            ? "bg-destructive/10 border-destructive/30 text-destructive cursor-not-allowed opacity-60"
+                            : isSelected
+                              ? "bg-primary border-primary text-primary-foreground"
+                              : "bg-muted/50 border-muted hover:bg-muted text-foreground"
+                        }`}
+                      >
+                        <div>{slot.display}</div>
+                        {isBooked ? (
+                          <div className="text-xs mt-1">Booked</div>
+                        ) : (
+                          !isBlocked && (
+                            <div className="text-xs mt-1 opacity-70">
+                              {slot.price} SAR
+                            </div>
+                          )
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>

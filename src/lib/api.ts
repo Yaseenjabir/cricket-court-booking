@@ -97,7 +97,7 @@ export const bookingApi = {
     endTime: string;
   }) =>
     apiCall<{ available: boolean; conflictingBookings?: Booking[] }>(
-      "/bookings/availability",
+      "/bookings/check-availability",
       {
         method: "POST",
         body: JSON.stringify(params),

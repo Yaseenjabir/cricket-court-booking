@@ -26,7 +26,7 @@ const AdminLayout = () => {
   }, [navigate]);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background overflow-hidden">
       <div className="hidden lg:block lg:fixed lg:inset-y-0 lg:z-10">
         <AdminSidebar />
       </div>
@@ -36,10 +36,10 @@ const AdminLayout = () => {
         onClose={() => setMobileNavOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col lg:pl-64">
+      <div className="flex-1 flex flex-col lg:pl-64 overflow-hidden">
         <AdminHeader onMenuClick={() => setMobileNavOpen(true)} />
 
-        <main className="flex-1">
+        <main className="flex-1 w-full">
           <Outlet />
         </main>
       </div>

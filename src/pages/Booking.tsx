@@ -10,7 +10,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
-import { courtApi, pricingApi } from "@/lib/api";
+import { courtApi, pricingApi, bookingApi } from "@/lib/api";
 import { Court, Pricing, TimeSlot } from "@/types/booking.types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -24,11 +24,13 @@ const Booking = () => {
   // Loading states
   const [loadingCourts, setLoadingCourts] = useState(true);
   const [loadingPricing, setLoadingPricing] = useState(true);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   // API data states
   const [courts, setCourts] = useState<Court[]>([]);
   const [pricing, setPricing] = useState<Pricing | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
 
   console.log("Debug:", {
     loadingCourts,
@@ -47,7 +49,7 @@ const Booking = () => {
         const response = await courtApi.getAll();
         if (response.success && response.data) {
           const activeCourts = response.data.filter(
-            (court: Court) => court.status === "active"
+            (court: Court) => court.status === "active",
           );
           setCourts(activeCourts);
           if (activeCourts.length > 0) {
@@ -87,8 +89,67 @@ const Booking = () => {
   useEffect(() => {
     if (selectedCourt && pricing) {
       generateTimeSlots();
+      fetchBookedSlots();
     }
   }, [selectedCourt, selectedDate, pricing]);
+
+  // Fetch booked slots for selected court and date
+  const fetchBookedSlots = async () => {
+    if (!selectedCourt || !selectedDate) return;
+
+    try {
+      setLoadingSlots(true);
+      const formattedDate = format(selectedDate, "yyyy-MM-dd");
+
+      // Get all time slots to check
+      const slotsToCheck: string[] = [];
+
+      // 9 AM to 11 PM
+      for (let hour = 9; hour < 24; hour++) {
+        slotsToCheck.push(`${hour.toString().padStart(2, "0")}:00`);
+      }
+
+      // 12 AM to 4 AM (next day)
+      for (let hour = 0; hour < 4; hour++) {
+        slotsToCheck.push(`${hour.toString().padStart(2, "0")}:00`);
+      }
+
+      // Check each slot for conflicts
+      const booked = new Set<string>();
+
+      for (const slot of slotsToCheck) {
+        const [hour] = slot.split(":").map(Number);
+        const endHour = hour + 1;
+        const endTime = `${endHour.toString().padStart(2, "0")}:00`;
+
+        try {
+          const response = await bookingApi.checkAvailability({
+            courtId: selectedCourt,
+            bookingDate: formattedDate,
+            startTime: slot,
+            endTime,
+          });
+
+          if (!response.data?.available) {
+            booked.add(slot);
+          }
+        } catch (error) {
+          console.error(`Failed to check availability for ${slot}:`, error);
+        }
+      }
+
+      setBookedSlots(booked);
+    } catch (error) {
+      console.error("Failed to fetch booked slots:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load booked slots",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
 
   // Generate time slots from 9 AM to 4 AM (next day)
   const generateTimeSlots = () => {
@@ -143,6 +204,15 @@ const Booking = () => {
   const toggleSlot = (time: string) => {
     setSlotError(""); // Clear any previous errors
 
+    // Check if slot is already booked
+    if (bookedSlots.has(time)) {
+      setSlotError(
+        "This time slot is already booked. Please select another slot.",
+      );
+      setTimeout(() => setSlotError(""), 4000);
+      return;
+    }
+
     // If deselecting, always allow it
     if (selectedSlots.includes(time)) {
       setSelectedSlots(selectedSlots.filter((t) => t !== time));
@@ -170,20 +240,36 @@ const Booking = () => {
 
     if (!isAdjacent) {
       setSlotError(
-        "Please select consecutive time slots only. You can only add slots at the start or end of your current selection."
+        "Please select consecutive time slots only. You can only add slots at the start or end of your current selection.",
       );
       setTimeout(() => setSlotError(""), 4000); // Clear error after 4 seconds
       return;
     }
 
+    // Check if there are any booked slots between the selected range
+    const rangeStart = Math.min(minIndex, currentSlotIndex);
+    const rangeEnd = Math.max(maxIndex, currentSlotIndex);
+    const allSlotTimes = timeSlots.map((s) => s.time);
+    const hasBookedInRange = allSlotTimes
+      .slice(rangeStart, rangeEnd + 1)
+      .some((slotTime) => bookedSlots.has(slotTime));
+
+    if (hasBookedInRange) {
+      setSlotError(
+        "Cannot select slots with booked slots in between. Please select a different range.",
+      );
+      setTimeout(() => setSlotError(""), 4000);
+      return;
+    }
+
     // Check if adding this slot would create a gap
     const newIndices = [...selectedIndices, currentSlotIndex].sort(
-      (a, b) => a - b
+      (a, b) => a - b,
     );
     for (let i = 0; i < newIndices.length - 1; i++) {
       if (newIndices[i + 1] - newIndices[i] !== 1) {
         setSlotError(
-          "Please select consecutive time slots only. Gaps are not allowed."
+          "Please select consecutive time slots only. Gaps are not allowed.",
         );
         setTimeout(() => setSlotError(""), 4000);
         return;
@@ -400,34 +486,50 @@ const Booking = () => {
                   <div className="flex justify-center py-12">
                     <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
                   </div>
+                ) : loadingSlots ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mb-2" />
+                    <span className="text-sm text-muted-foreground">
+                      Loading availability...
+                    </span>
+                  </div>
                 ) : (
                   <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                    {timeSlots.map((slot, index) => (
-                      <button
-                        key={index}
-                        onClick={() => slot.available && toggleSlot(slot.time)}
-                        disabled={!slot.available}
-                        className={`p-3 rounded-lg text-sm font-medium transition-all border ${
-                          selectedSlots.includes(slot.time)
-                            ? "bg-primary border-primary text-primary-foreground shadow-md"
-                            : slot.available
-                              ? slot.category === "night"
-                                ? "bg-primary/10 border-primary/30 hover:bg-primary/20 text-foreground"
-                                : "bg-secondary/10 border-secondary/30 hover:bg-secondary/20 text-foreground"
-                              : "bg-muted border-muted text-muted-foreground cursor-not-allowed"
-                        }`}
-                      >
-                        <div>{slot.display}</div>
-                        {slot.available && (
-                          <div className="text-xs mt-1 opacity-70">
-                            {slot.price} SAR
-                          </div>
-                        )}
-                        {!slot.available && (
-                          <div className="text-xs mt-1">Booked</div>
-                        )}
-                      </button>
-                    ))}
+                    {timeSlots.map((slot, index) => {
+                      const isBooked = bookedSlots.has(slot.time);
+                      const isSelected = selectedSlots.includes(slot.time);
+                      const isAvailable = slot.available && !isBooked;
+
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => isAvailable && toggleSlot(slot.time)}
+                          disabled={!isAvailable}
+                          className={`p-3 rounded-lg text-sm font-medium transition-all border ${
+                            isBooked
+                              ? "bg-destructive/10 border-destructive/30 text-destructive cursor-not-allowed opacity-60"
+                              : isSelected
+                                ? "bg-primary border-primary text-primary-foreground shadow-md"
+                                : isAvailable
+                                  ? slot.category === "night"
+                                    ? "bg-primary/10 border-primary/30 hover:bg-primary/20 text-foreground"
+                                    : "bg-secondary/10 border-secondary/30 hover:bg-secondary/20 text-foreground"
+                                  : "bg-muted border-muted text-muted-foreground cursor-not-allowed"
+                          }`}
+                        >
+                          <div>{slot.display}</div>
+                          {isBooked ? (
+                            <div className="text-xs mt-1">Booked</div>
+                          ) : isAvailable ? (
+                            <div className="text-xs mt-1 opacity-70">
+                              {slot.price} SAR
+                            </div>
+                          ) : (
+                            <div className="text-xs mt-1">Unavailable</div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
 

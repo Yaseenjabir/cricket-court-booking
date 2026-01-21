@@ -19,7 +19,7 @@ const Footer = () => {
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-xl hero-gradient flex items-center justify-center">
                 <img
-                  src="logo.png"
+                  src="/logo.png"
                   alt="Jeddah Cricket Nets Logo"
                   className="h-10 w-10 object-contain"
                 />{" "}

@@ -4,7 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Calendar, Clock, MapPin, Tag, CheckCircle, Percent, Loader2, X, Info } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Tag,
+  CheckCircle,
+  Percent,
+  Loader2,
+  X,
+  Info,
+} from "lucide-react";
 import { format } from "date-fns";
 import { promoCodeApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -42,7 +52,9 @@ const BookingDetails = () => {
   const amountNow = paymentOption === "full" ? finalTotal : finalTotal * 0.5;
 
   // Check if phone is valid (Saudi format)
-  const isPhoneValid = formData.phone.trim() && /^(\+966|05)[0-9]{8,9}$/.test(formData.phone.replace(/\s/g, ''));
+  const isPhoneValid =
+    formData.phone.trim() &&
+    /^(\+966|05)[0-9]{8,9}$/.test(formData.phone.replace(/\s/g, ""));
 
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) {
@@ -81,7 +93,9 @@ const BookingDetails = () => {
         });
         toast({
           title: "Success!",
-          description: response.data.message || `Promo code applied! You saved ${response.data.discount} SAR`,
+          description:
+            response.data.message ||
+            `Promo code applied! You saved ${response.data.discount} SAR`,
           variant: "default",
         });
       } else {
@@ -110,17 +124,19 @@ const BookingDetails = () => {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
     }
-    
+
     if (!formData.phone.trim()) {
       newErrors.phone = "Phone number is required";
-    } else if (!/^(\+966|05)[0-9]{8,9}$/.test(formData.phone.replace(/\s/g, ''))) {
+    } else if (
+      !/^(\+966|05)[0-9]{8,9}$/.test(formData.phone.replace(/\s/g, ""))
+    ) {
       newErrors.phone = "Please enter a valid Saudi phone number";
     }
-    
+
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -142,10 +158,10 @@ const BookingDetails = () => {
       {/* Header */}
       <section className="hero-gradient py-12">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-background mb-2">
             Booking Details
           </h1>
-          <p className="text-primary-foreground/80">
+          <p className="text-background/80">
             Complete your information to confirm the booking
           </p>
         </div>
@@ -158,7 +174,9 @@ const BookingDetails = () => {
             <div className="lg:col-span-2 space-y-6">
               {/* Booking Summary Card */}
               <div className="bg-card rounded-xl border p-6">
-                <h2 className="font-semibold text-foreground mb-4">Booking Summary</h2>
+                <h2 className="font-semibold text-foreground mb-4">
+                  Booking Summary
+                </h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -166,7 +184,9 @@ const BookingDetails = () => {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Court</p>
-                      <p className="font-medium text-foreground">Court {bookingData.court}</p>
+                      <p className="font-medium text-foreground">
+                        Court {bookingData.court}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -176,7 +196,7 @@ const BookingDetails = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">Date</p>
                       <p className="font-medium text-foreground">
-                        {format(new Date(bookingData.date), 'MMM d, yyyy')}
+                        {format(new Date(bookingData.date), "MMM d, yyyy")}
                       </p>
                     </div>
                   </div>
@@ -186,7 +206,9 @@ const BookingDetails = () => {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Time</p>
-                      <p className="font-medium text-foreground">7:00 PM - 10:00 PM</p>
+                      <p className="font-medium text-foreground">
+                        7:00 PM - 10:00 PM
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -203,57 +225,91 @@ const BookingDetails = () => {
 
               {/* Customer Details */}
               <div className="bg-card rounded-xl border p-6">
-                <h2 className="font-semibold text-foreground mb-4">Your Information</h2>
+                <h2 className="font-semibold text-foreground mb-4">
+                  Your Information
+                </h2>
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="name">Full Name *</Label>
-                    <Input 
-                      id="name" 
+                    <Input
+                      id="name"
                       placeholder="Enter your full name"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                       className={errors.name ? "border-destructive" : ""}
                     />
-                    {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
+                    {errors.name && (
+                      <p className="text-sm text-destructive mt-1">
+                        {errors.name}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="phone">Phone Number *</Label>
-                    <Input 
-                      id="phone" 
+                    <Input
+                      id="phone"
                       placeholder="+966 5X XXX XXXX"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
                       className={errors.phone ? "border-destructive" : ""}
                     />
-                    {errors.phone && <p className="text-sm text-destructive mt-1">{errors.phone}</p>}
+                    {errors.phone && (
+                      <p className="text-sm text-destructive mt-1">
+                        {errors.phone}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="email">Email Address *</Label>
-                    <Input 
-                      id="email" 
+                    <Input
+                      id="email"
                       type="email"
                       placeholder="your@email.com"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
                       className={errors.email ? "border-destructive" : ""}
                     />
-                    {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
+                    {errors.email && (
+                      <p className="text-sm text-destructive mt-1">
+                        {errors.email}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Payment Options */}
               <div className="bg-card rounded-xl border p-6">
-                <h2 className="font-semibold text-foreground mb-4">Payment Option</h2>
-                <RadioGroup value={paymentOption} onValueChange={setPaymentOption} className="space-y-3">
-                  <label className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-colors ${
-                    paymentOption === "full" ? "border-primary bg-primary/5" : "hover:bg-muted/50"
-                  }`}>
+                <h2 className="font-semibold text-foreground mb-4">
+                  Payment Option
+                </h2>
+                <RadioGroup
+                  value={paymentOption}
+                  onValueChange={setPaymentOption}
+                  className="space-y-3"
+                >
+                  <label
+                    className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-colors ${
+                      paymentOption === "full"
+                        ? "border-primary bg-primary/5"
+                        : "hover:bg-muted/50"
+                    }`}
+                  >
                     <div className="flex items-center gap-3">
                       <RadioGroupItem value="full" id="full" />
                       <div>
-                        <p className="font-medium text-foreground">Pay 100% Online</p>
-                        <p className="text-sm text-muted-foreground">Get 2% discount on total amount</p>
+                        <p className="font-medium text-foreground">
+                          Pay 100% Online
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Get 2% discount on total amount
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -262,14 +318,22 @@ const BookingDetails = () => {
                       </span>
                     </div>
                   </label>
-                  <label className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-colors ${
-                    paymentOption === "partial" ? "border-primary bg-primary/5" : "hover:bg-muted/50"
-                  }`}>
+                  <label
+                    className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-colors ${
+                      paymentOption === "partial"
+                        ? "border-primary bg-primary/5"
+                        : "hover:bg-muted/50"
+                    }`}
+                  >
                     <div className="flex items-center gap-3">
                       <RadioGroupItem value="partial" id="partial" />
                       <div>
-                        <p className="font-medium text-foreground">Pay 50% Now, 50% at Venue</p>
-                        <p className="text-sm text-muted-foreground">Pay remaining amount when you arrive</p>
+                        <p className="font-medium text-foreground">
+                          Pay 50% Now, 50% at Venue
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Pay remaining amount when you arrive
+                        </p>
                       </div>
                     </div>
                   </label>
@@ -278,21 +342,25 @@ const BookingDetails = () => {
 
               {/* Promo Code */}
               <div className="bg-card rounded-xl border p-6">
-                <h2 className="font-semibold text-foreground mb-4">Promo Code</h2>
+                <h2 className="font-semibold text-foreground mb-4">
+                  Promo Code
+                </h2>
                 <div className="flex gap-3">
                   <div className="flex-1 relative">
                     <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input 
+                    <Input
                       placeholder="Enter promo code"
                       className="pl-10"
                       value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      onChange={(e) =>
+                        setPromoCode(e.target.value.toUpperCase())
+                      }
                       disabled={promoApplied || promoLoading}
                     />
                   </div>
                   {promoApplied ? (
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={handleRemovePromo}
                       className="text-destructive hover:text-destructive"
                     >
@@ -300,8 +368,8 @@ const BookingDetails = () => {
                       Remove
                     </Button>
                   ) : (
-                    <Button 
-                      variant={promoApplied ? "success" : "outline"} 
+                    <Button
+                      variant={promoApplied ? "success" : "outline"}
                       onClick={handleApplyPromo}
                       disabled={promoLoading || !promoCode.trim()}
                     >
@@ -319,7 +387,8 @@ const BookingDetails = () => {
                 {promoApplied && promoData && (
                   <p className="text-sm text-success mt-2 flex items-center gap-1">
                     <CheckCircle className="w-4 h-4" />
-                    {promoData.message || `You saved ${promoDiscount.toFixed(0)} SAR`}
+                    {promoData.message ||
+                      `You saved ${promoDiscount.toFixed(0)} SAR`}
                   </p>
                 )}
                 {!isPhoneValid && !promoApplied && (
@@ -334,19 +403,27 @@ const BookingDetails = () => {
             {/* Price Summary */}
             <div className="lg:col-span-1">
               <div className="bg-card rounded-xl border p-6 sticky top-20">
-                <h3 className="font-semibold text-foreground mb-4">Price Breakdown</h3>
-                
+                <h3 className="font-semibold text-foreground mb-4">
+                  Price Breakdown
+                </h3>
+
                 <div className="space-y-3 mb-4">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">7 PM - 8 PM (Night)</span>
+                    <span className="text-muted-foreground">
+                      7 PM - 8 PM (Night)
+                    </span>
                     <span className="text-foreground">110 SAR</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">8 PM - 9 PM (Night)</span>
+                    <span className="text-muted-foreground">
+                      8 PM - 9 PM (Night)
+                    </span>
                     <span className="text-foreground">110 SAR</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">9 PM - 10 PM (Night)</span>
+                    <span className="text-muted-foreground">
+                      9 PM - 10 PM (Night)
+                    </span>
                     <span className="text-foreground">110 SAR</span>
                   </div>
                 </div>
@@ -373,7 +450,9 @@ const BookingDetails = () => {
                 <div className="border-t mt-3 pt-3">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-semibold text-foreground">Total</span>
-                    <span className="text-2xl font-bold text-primary">{finalTotal.toFixed(0)} SAR</span>
+                    <span className="text-2xl font-bold text-primary">
+                      {finalTotal.toFixed(0)} SAR
+                    </span>
                   </div>
                   {paymentOption === "partial" && (
                     <div className="text-sm text-muted-foreground text-right">
@@ -382,18 +461,29 @@ const BookingDetails = () => {
                   )}
                 </div>
 
-                <Link 
-                  to="/booking/payment" 
-                  state={{ ...bookingData, ...formData, paymentOption, finalTotal, amountNow }}
+                <Link
+                  to="/booking/payment"
+                  state={{
+                    ...bookingData,
+                    ...formData,
+                    paymentOption,
+                    finalTotal,
+                    amountNow,
+                  }}
                   onClick={handleContinue}
                 >
-                  <Button variant="hero" className="w-full mt-6" size="lg">
+                  <Button
+                    variant="hero"
+                    className="w-full mt-6 text-background"
+                    size="lg"
+                  >
                     Continue to Payment
                   </Button>
                 </Link>
 
                 <p className="text-xs text-muted-foreground text-center mt-4">
-                  By continuing, you agree to our Terms of Service and Cancellation Policy
+                  By continuing, you agree to our Terms of Service and
+                  Cancellation Policy
                 </p>
               </div>
             </div>

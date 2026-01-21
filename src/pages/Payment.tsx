@@ -23,25 +23,35 @@ const Payment = () => {
 
   const paymentMethods = [
     { id: "mada", name: "mada", icon: "💳", description: "Debit Cards" },
-    { id: "card", name: "Visa / Mastercard", icon: "💳", description: "Credit/Debit Cards" },
-    { id: "apple", name: "Apple Pay", icon: "🍎", description: "Quick & Secure" },
+    {
+      id: "card",
+      name: "Visa / Mastercard",
+      icon: "💳",
+      description: "Credit/Debit Cards",
+    },
+    {
+      id: "apple",
+      name: "Apple Pay",
+      icon: "🍎",
+      description: "Quick & Secure",
+    },
   ];
 
   const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
     const matches = v.match(/\d{4,16}/g);
-    const match = matches && matches[0] || '';
+    const match = (matches && matches[0]) || "";
     const parts = [];
     for (let i = 0, len = match.length; i < len; i += 4) {
       parts.push(match.substring(i, i + 4));
     }
-    return parts.length ? parts.join(' ') : value;
+    return parts.length ? parts.join(" ") : value;
   };
 
   const formatExpiry = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
     if (v.length >= 2) {
-      return v.substring(0, 2) + '/' + v.substring(2, 4);
+      return v.substring(0, 2) + "/" + v.substring(2, 4);
     }
     return v;
   };
@@ -51,10 +61,10 @@ const Payment = () => {
       {/* Header */}
       <section className="hero-gradient py-12">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-background mb-2">
             Secure Payment
           </h1>
-          <p className="text-primary-foreground/80">
+          <p className="text-background/80">
             Complete your booking with a secure payment
           </p>
         </div>
@@ -65,17 +75,23 @@ const Payment = () => {
           {/* Amount to Pay */}
           <div className="bg-card rounded-xl border p-6 mb-6 text-center">
             <p className="text-muted-foreground mb-2">Amount to Pay</p>
-            <p className="text-4xl font-bold text-primary">{bookingData.amountNow?.toFixed(0) || 323} SAR</p>
+            <p className="text-4xl font-bold text-primary">
+              {bookingData.amountNow?.toFixed(0) || 323} SAR
+            </p>
             {bookingData.paymentOption === "partial" && (
               <p className="text-sm text-muted-foreground mt-2">
-                Remaining {(bookingData.finalTotal - bookingData.amountNow).toFixed(0)} SAR to be paid at venue
+                Remaining{" "}
+                {(bookingData.finalTotal - bookingData.amountNow).toFixed(0)}{" "}
+                SAR to be paid at venue
               </p>
             )}
           </div>
 
           {/* Payment Methods */}
           <div className="bg-card rounded-xl border p-6 mb-6">
-            <h2 className="font-semibold text-foreground mb-4">Payment Method</h2>
+            <h2 className="font-semibold text-foreground mb-4">
+              Payment Method
+            </h2>
             <div className="grid grid-cols-3 gap-3">
               {paymentMethods.map((method) => (
                 <button
@@ -88,8 +104,12 @@ const Payment = () => {
                   }`}
                 >
                   <span className="text-2xl mb-2 block">{method.icon}</span>
-                  <p className="font-medium text-foreground text-sm">{method.name}</p>
-                  <p className="text-xs text-muted-foreground">{method.description}</p>
+                  <p className="font-medium text-foreground text-sm">
+                    {method.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {method.description}
+                  </p>
                 </button>
               ))}
             </div>
@@ -109,7 +129,12 @@ const Payment = () => {
                     id="cardNumber"
                     placeholder="1234 5678 9012 3456"
                     value={cardData.number}
-                    onChange={(e) => setCardData({ ...cardData, number: formatCardNumber(e.target.value) })}
+                    onChange={(e) =>
+                      setCardData({
+                        ...cardData,
+                        number: formatCardNumber(e.target.value),
+                      })
+                    }
                     maxLength={19}
                   />
                 </div>
@@ -119,7 +144,12 @@ const Payment = () => {
                     id="cardName"
                     placeholder="JOHN DOE"
                     value={cardData.name}
-                    onChange={(e) => setCardData({ ...cardData, name: e.target.value.toUpperCase() })}
+                    onChange={(e) =>
+                      setCardData({
+                        ...cardData,
+                        name: e.target.value.toUpperCase(),
+                      })
+                    }
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -129,7 +159,12 @@ const Payment = () => {
                       id="expiry"
                       placeholder="MM/YY"
                       value={cardData.expiry}
-                      onChange={(e) => setCardData({ ...cardData, expiry: formatExpiry(e.target.value) })}
+                      onChange={(e) =>
+                        setCardData({
+                          ...cardData,
+                          expiry: formatExpiry(e.target.value),
+                        })
+                      }
                       maxLength={5}
                     />
                   </div>
@@ -140,7 +175,12 @@ const Payment = () => {
                       placeholder="123"
                       type="password"
                       value={cardData.cvv}
-                      onChange={(e) => setCardData({ ...cardData, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                      onChange={(e) =>
+                        setCardData({
+                          ...cardData,
+                          cvv: e.target.value.replace(/\D/g, "").slice(0, 4),
+                        })
+                      }
                       maxLength={4}
                     />
                   </div>
@@ -156,8 +196,12 @@ const Payment = () => {
               <p className="text-muted-foreground mb-4">
                 Click the button below to pay with Apple Pay
               </p>
-              <Button variant="default" size="lg" className="bg-foreground text-background hover:bg-foreground/90">
-                 Pay with Apple Pay
+              <Button
+                variant="default"
+                size="lg"
+                className="bg-foreground text-background hover:bg-foreground/90"
+              >
+                Pay with Apple Pay
               </Button>
             </div>
           )}
@@ -176,13 +220,14 @@ const Payment = () => {
 
           {/* Pay Button */}
           <Link to="/booking/confirmation">
-            <Button variant="hero" size="xl" className="w-full">
+            <Button variant="hero" size="xl" className="w-full text-background">
               Pay {bookingData.amountNow?.toFixed(0) || 323} SAR
             </Button>
           </Link>
 
           <p className="text-xs text-muted-foreground text-center mt-4">
-            Your payment is processed securely. We do not store your card details.
+            Your payment is processed securely. We do not store your card
+            details.
           </p>
         </div>
       </div>

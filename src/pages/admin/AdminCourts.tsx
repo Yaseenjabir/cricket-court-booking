@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Edit, Power, Upload, Trash2 } from "lucide-react";
+import Loader from "@/components/layout/Loader";
 import {
   Dialog,
   DialogContent,
@@ -246,20 +247,18 @@ const AdminCourts = () => {
         );
 
         const data = await response.json();
-        console.log("UPDATE RESPONSE IMAGE:", data.data.imageUrl);
-        console.log("EDITING COURT ID:", editingCourtId);
 
         if (response.ok && data.success) {
           setCourts((prev) =>
             prev.map((c) =>
               c.id === editingCourtId
                 ? {
-                    ...c,
+                    id: c.id,
                     name: data.data.name,
                     description: data.data.description,
                     status: data.data.status,
                     features: data.data.features,
-                    image: data.data.imageUrl,
+                    image: `${data.data.imageUrl}?t=${Date.now()}`,
                   }
                 : c
             )
@@ -271,9 +270,6 @@ const AdminCourts = () => {
 
           setIsEditModalOpen(false);
           resetEditForm();
-
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          await fetchCourts();
         } else {
           throw new Error(data.message || "Failed to update court");
         }
@@ -863,8 +859,8 @@ const AdminCourts = () => {
         <div className="p-4 lg:p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {isLoading ? (
-              <div className="col-span-full text-center py-12">
-                <p className="text-muted-foreground">Loading courts...</p>
+              <div className="col-span-full py-12">
+                <Loader size="xl" text="Loading courts..." />
               </div>
             ) : courts.length === 0 ? (
               <div className="col-span-full text-center py-12">
@@ -879,6 +875,7 @@ const AdminCourts = () => {
                   <div className="relative h-40">
                     {court.image && (
                       <img
+                        key={court.image}
                         src={court.image}
                         alt={court.name}
                         className="w-full h-full object-cover"

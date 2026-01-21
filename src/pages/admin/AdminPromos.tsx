@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Copy, Trash2, RefreshCw, Loader2 } from "lucide-react";
+import { Plus, Copy, Trash2, RefreshCw } from "lucide-react";
+import Loader from "@/components/layout/Loader";
 import {
   Dialog,
   DialogContent,
@@ -554,8 +555,8 @@ const AdminPromos = () => {
 
           {/* Loading State */}
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            <div className="py-12">
+              <Loader size="lg" text="Loading promo codes..." />
             </div>
           ) : promos.length === 0 ? (
             /* Empty State */

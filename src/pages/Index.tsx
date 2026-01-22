@@ -8,12 +8,50 @@ import {
   ArrowRight,
   CheckCircle,
 } from "lucide-react";
+import { useState, useEffect } from "react";
 import heroImage from "@/assets/hero-cricket.jpg";
 import court1 from "@/assets/court-1.jpg";
-import court2 from "@/assets/court-2.jpg";
-import court3 from "@/assets/court-3.jpg";
+import Loader from "@/components/layout/Loader";
+import { COURTS_URL } from "@/constants/constants";
+
+interface Court {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl: string;
+  status: string;
+  features: string[];
+}
 
 const Index = () => {
+  const [courts, setCourts] = useState<Court[]>([]);
+  const [isLoadingCourts, setIsLoadingCourts] = useState(true);
+
+  useEffect(() => {
+    fetchCourts();
+  }, []);
+
+  const fetchCourts = async () => {
+    setIsLoadingCourts(true);
+    const API_URL = import.meta.env.VITE_API_URL;
+
+    try {
+      const response = await fetch(`${API_URL}${COURTS_URL}`);
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        const activeCourts = data.data
+          .filter((court: any) => court.status === "active")
+          .slice(0, 3);
+        setCourts(activeCourts);
+      }
+    } catch (error) {
+      console.error("Error fetching courts:", error);
+    } finally {
+      setIsLoadingCourts(false);
+    }
+  };
+
   const steps = [
     {
       icon: Calendar,
@@ -66,7 +104,7 @@ const Index = () => {
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-2xl">
             <span className="inline-block px-4 py-2 rounded-full bg-secondary/20 text-secondary text-sm font-medium mb-6 animate-fade-in">
-              #1 Cricket Facility in Riyadh
+              #1 Cricket Facilities in Wadi Marik, Jeddah
             </span>
             <h1
               className="text-4xl md:text-6xl font-bold text-background mb-6 animate-fade-in"
@@ -124,13 +162,25 @@ const Index = () => {
                 <label className="text-xs text-muted-foreground block mb-1">
                   Date
                 </label>
-                <span className="font-medium">Today, Jan 14</span>
+                <span className="font-medium">
+                  {new Date().toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
               </div>
               <div className="bg-muted rounded-lg px-4 py-3">
                 <label className="text-xs text-muted-foreground block mb-1">
                   Time
                 </label>
-                <span className="font-medium">7:00 PM</span>
+                <span className="font-medium">
+                  {new Date().toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
+                </span>
               </div>
               <div className="bg-muted rounded-lg px-4 py-3">
                 <label className="text-xs text-muted-foreground block mb-1">
@@ -199,62 +249,54 @@ const Index = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                image: court1,
-                name: "Court 1 - Pro Lane",
-                features: [
-                  "LED Lights",
-                  "Professional Nets",
-                  "Air Conditioned",
-                ],
-              },
-              {
-                image: court2,
-                name: "Court 2 - Practice Arena",
-                features: ["LED Lights", "Bowling Machine", "Video Analysis"],
-              },
-              {
-                image: court3,
-                name: "Court 3 - Match Court",
-                features: ["Full Size", "LED Lights", "Spectator Area"],
-              },
-            ].map((court, index) => (
-              <div
-                key={index}
-                className="bg-card rounded-xl overflow-hidden shadow-soft hover:shadow-lg transition-shadow group"
-              >
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={court.image}
-                    alt={court.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-3">
-                    {court.name}
-                  </h3>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {court.features.map((feature, i) => (
-                      <span
-                        key={i}
-                        className="px-2 py-1 text-xs font-medium bg-muted rounded-md text-muted-foreground"
-                      >
-                        {feature}
-                      </span>
-                    ))}
+          {isLoadingCourts ? (
+            <div className="py-12">
+              <Loader size="lg" text="Loading courts..." />
+            </div>
+          ) : courts.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                No courts available at the moment.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {courts.map((court) => (
+                <div
+                  key={court.id}
+                  className="bg-card rounded-xl overflow-hidden shadow-soft hover:shadow-lg transition-shadow group flex flex-col h-full"
+                >
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={court.imageUrl}
+                      alt={court.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
                   </div>
-                  <Link to="/booking">
-                    <Button variant="secondary" className="w-full">
-                      Book This Court
-                    </Button>
-                  </Link>
+                  <div className="p-6 flex flex-col flex-1">
+                    <h3 className="text-lg font-semibold text-foreground mb-3 line-clamp-1">
+                      {court.name}
+                    </h3>
+                    <div className="flex flex-wrap gap-2 mb-4 flex-1 content-start">
+                      {court.features.slice(0, 3).map((feature, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-1 text-xs font-medium bg-muted rounded-md text-muted-foreground"
+                        >
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                    <Link to="/booking" className="mt-auto">
+                      <Button variant="secondary" className="w-full">
+                        Book This Court
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -297,7 +339,9 @@ const Index = () => {
                 />
               </div>
               <div className="absolute -bottom-6 -left-2 bg-card p-6 rounded-xl shadow-lg">
-                <div className="text-4xl font-bold text-gradient">5</div>
+                <div className="text-4xl font-bold text-gradient">
+                  {courts.length || 5}
+                </div>
                 <div className="text-muted-foreground">Professional Courts</div>
               </div>
             </div>

@@ -477,7 +477,7 @@ const AdminCourts = () => {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className=" flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex-shrink-0 bg-background border-b p-4 lg:p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -891,12 +891,12 @@ const AdminCourts = () => {
               courts.map((court) => (
                 <div
                   key={court.id}
-                  className="bg-card rounded-xl border overflow-hidden hover:shadow-lg transition-shadow"
+                  className="bg-card rounded-xl border overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full"
                 >
                   <div className="relative h-40">
                     {court.image && (
                       <img
-                        key={court.image}
+                        key={court.id}
                         src={court.image}
                         alt={court.name}
                         className="w-full h-full object-cover"
@@ -913,18 +913,18 @@ const AdminCourts = () => {
                     </div>
                   </div>
 
-                  <div className="p-5">
+                  <div className="p-5 flex flex-col flex-1">
                     <div className="mb-3">
-                      <h3 className="font-semibold text-foreground">
+                      <h3 className="font-semibold text-foreground line-clamp-1">
                         {court.name}
                       </h3>
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className="text-sm text-muted-foreground line-clamp-2">
                         {court.description}
                       </p>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {court.features.map((feature, idx) => (
+                    <div className="flex flex-wrap gap-2 mb-4 flex-1 content-start">
+                      {court.features.slice(0, 4).map((feature, idx) => (
                         <span
                           key={`${court.id}-${feature}-${idx}`}
                           className="px-2 py-1 text-xs font-medium bg-muted rounded-md text-muted-foreground"
@@ -932,27 +932,36 @@ const AdminCourts = () => {
                           {feature}
                         </span>
                       ))}
+                      {court.features.length > 4 && (
+                        <span className="px-2 py-1 text-xs font-medium bg-muted rounded-md text-muted-foreground">
+                          +{court.features.length - 4} more
+                        </span>
+                      )}
                     </div>
 
-                    <div className="flex items-center justify-between pt-3 border-t">
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={court.status === "active"}
-                          onCheckedChange={() => toggleCourtStatus(court.id)}
-                          disabled={loadingStatus === court.id} // optional: prevent spamming
-                        />
-                        <span className="text-sm text-muted-foreground">
-                          {court.status === "active" ? "Active" : "Inactive"}
-                        </span>
+                    <div className="flex flex-col gap-3 pt-3 border-t mt-auto">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={court.status === "active"}
+                            onCheckedChange={() => toggleCourtStatus(court.id)}
+                            disabled={loadingStatus === court.id}
+                          />
+                          <span className="text-sm text-muted-foreground">
+                            {court.status === "active" ? "Active" : "Inactive"}
+                          </span>
+                        </div>
                       </div>
+
                       <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => openEditModal(court)}
+                          className="flex-1"
                         >
                           <Edit className="w-4 h-4" />
-                          <span className="hidden sm:inline ml-1">Edit</span>
+                          <span className="ml-1">Edit</span>
                         </Button>
                         <Button
                           variant="destructive"
@@ -961,9 +970,10 @@ const AdminCourts = () => {
                             setDeletingCourtId(court.id);
                             setIsDeleteModalOpen(true);
                           }}
+                          className="flex-1"
                         >
                           <Trash2 className="w-4 h-4" />
-                          <span className="hidden sm:inline ml-1">Delete</span>
+                          <span className="ml-1">Delete</span>
                         </Button>
                       </div>
                     </div>
@@ -972,7 +982,6 @@ const AdminCourts = () => {
               ))
             )}
           </div>
-
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-card rounded-xl border p-6">

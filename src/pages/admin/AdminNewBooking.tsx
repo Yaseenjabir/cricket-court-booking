@@ -370,7 +370,9 @@ const AdminNewBooking = () => {
 
       // Calculate end time (add 1 hour to last slot)
       const [endHour, endMinute] = endTime.split(":").map(Number);
-      const actualEndTime = `${(endHour + 1).toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
+      const actualEndTime = `${(endHour + 1)
+        .toString()
+        .padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
 
       // Format date as YYYY-MM-DD
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
@@ -626,15 +628,9 @@ const AdminNewBooking = () => {
                 <span className="font-medium text-foreground">
                   {format(selectedDate, "MMM d, yyyy")}
                 </span>
-                <span className="font-medium text-foreground">
-                  {format(selectedDate, "MMM d, yyyy")}
-                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Duration</span>
-                <span className="font-medium text-foreground">
-                  {selectedSlots.length} hour(s)
-                </span>
                 <span className="font-medium text-foreground">
                   {selectedSlots.length} hour(s)
                 </span>
@@ -662,7 +658,7 @@ const AdminNewBooking = () => {
 
             <Button
               variant="hero"
-              className="w-full"
+              className="w-full text-background"
               size="lg"
               disabled={!isFormValid || submitting}
               onClick={handleSubmit}
@@ -674,7 +670,7 @@ const AdminNewBooking = () => {
                 </>
               ) : (
                 <>
-                  <Check className="w-4 h-4" />
+                  <Check className="w-4 h-4 text-background" />
                   {isBlocked ? "Block Time Slot" : "Create Booking"}
                 </>
               )}

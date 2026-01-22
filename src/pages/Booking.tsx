@@ -309,7 +309,9 @@ const Booking = () => {
     if (selectedSlots.length > 0 && courtId !== selectedCourt) {
       toast({
         title: "Court Changed",
-        description: `Your previously selected time slots have been cleared. Please select slots for ${courts.find((c) => c.id === courtId)?.name || "the new court"}.`,
+        description: `Your previously selected time slots have been cleared. Please select slots for ${
+          courts.find((c) => c.id === courtId)?.name || "the new court"
+        }.`,
         variant: "default",
       });
       setSelectedSlots([]);
@@ -376,7 +378,9 @@ const Booking = () => {
                       setSlotError(""); // Clear any errors
                     }
                   }}
-                  disabled={(date) => date < new Date()}
+                  disabled={(date) =>
+                    date < new Date(new Date().setHours(0, 0, 0, 0))
+                  }
                   className="rounded-md border pointer-events-auto"
                 />
               </div>

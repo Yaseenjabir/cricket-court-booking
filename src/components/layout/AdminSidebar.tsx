@@ -12,6 +12,7 @@ import {
   Volleyball,
   ChevronLeft,
   ChevronRight,
+  Home,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ const AdminSidebar = () => {
     { icon: MapPin, label: "Courts", href: "/admin/courts" },
     { icon: DollarSign, label: "Pricing", href: "/admin/pricing" },
     { icon: Tag, label: "Promo Codes", href: "/admin/promos" },
+    { icon: Home, label: "Back to Home", href: "/" },
     // { icon: BarChart3, label: "Reports", href: "/admin/reports" },
     // { icon: Settings, label: "Settings", href: "/admin/settings" },
   ];

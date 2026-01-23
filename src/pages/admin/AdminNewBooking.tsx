@@ -195,6 +195,15 @@ const AdminNewBooking = () => {
     const slots = [];
     const isWeekend = [5, 6].includes(selectedDate.getDay()); // Friday=5, Saturday=6
 
+    // Check if selected date is today
+    const today = new Date();
+    const isToday =
+      selectedDate.getDate() === today.getDate() &&
+      selectedDate.getMonth() === today.getMonth() &&
+      selectedDate.getFullYear() === today.getFullYear();
+
+    const currentHour = today.getHours();
+
     // 9 AM to 11 PM
     for (let hour = 9; hour < 24; hour++) {
       const isNight = hour >= 19; // 7 PM onwards
@@ -206,15 +215,19 @@ const AdminNewBooking = () => {
         price = isNight ? pricing.weekdayNightRate : pricing.weekdayDayRate;
       }
 
+      // Check if this hour has passed (only for today)
+      const isPastHour = isToday && hour <= currentHour;
+
       slots.push({
         time: `${hour.toString().padStart(2, "0")}:00`,
         display: `${hour > 12 ? hour - 12 : hour}:00 ${
           hour >= 12 ? "PM" : "AM"
         }`,
-        available: true, // Admin can book any slot
+        available: !isPastHour, // Disable past hours on current day
         price,
         category: isNight ? "night" : "day",
         isWeekend,
+        isPast: isPastHour,
       });
     }
 
@@ -224,14 +237,20 @@ const AdminNewBooking = () => {
         ? pricing.weekendNightRate
         : pricing.weekdayNightRate;
 
+      // For next day slots (12 AM - 4 AM), they're only available if:
+      // - It's NOT today, OR
+      // - It's today AND current hour is >= 9 (meaning we're in the booking window)
+      const isPastHour = isToday && currentHour < 9;
+
       slots.push({
         time: `${hour.toString().padStart(2, "0")}:00`,
         display: `${hour === 0 ? 12 : hour}:00 AM`,
-        available: true,
+        available: !isPastHour,
         price,
         category: "night",
         isWeekend,
         nextDay: true,
+        isPast: isPastHour,
       });
     }
 
@@ -239,6 +258,19 @@ const AdminNewBooking = () => {
   };
 
   const toggleSlot = (time: string) => {
+    // Find the slot to check if it's available
+    const slot = timeSlots.find((s) => s.time === time);
+
+    // Check if slot is past hour (not available)
+    if (slot && !slot.available) {
+      toast({
+        title: "Slot Unavailable",
+        description: "Cannot book past time slots",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Check if slot is already booked
     if (bookedSlots.has(time)) {
       toast({
@@ -564,8 +596,7 @@ const AdminNewBooking = () => {
               <Label className="mb-2 block">Select Time Slots</Label>
               {loadingPricing ? (
                 <div className="flex justify-center py-8">
-                  <Loader
-                   className="w-6 h-6 animate-spin" />
+                  <Loader className="w-6 h-6 animate-spin" />
                 </div>
               ) : loadingSlots ? (
                 <div className="flex justify-center py-8">
@@ -579,14 +610,15 @@ const AdminNewBooking = () => {
                   {timeSlots.map((slot, index) => {
                     const isBooked = bookedSlots.has(slot.time);
                     const isSelected = selectedSlots.includes(slot.time);
+                    const isPastOrBooked = !slot.available || isBooked; // Check both past and booked
 
                     return (
                       <button
                         key={index}
                         onClick={() => toggleSlot(slot.time)}
-                        disabled={isBooked}
+                        disabled={isPastOrBooked} // Disable if past hour OR booked
                         className={`p-2 rounded-lg text-sm font-medium transition-all border ${
-                          isBooked
+                          isPastOrBooked
                             ? "bg-destructive/10 border-destructive/30 text-destructive cursor-not-allowed opacity-60"
                             : isSelected
                               ? "bg-primary border-primary text-primary-foreground"
@@ -594,8 +626,10 @@ const AdminNewBooking = () => {
                         }`}
                       >
                         <div>{slot.display}</div>
-                        {isBooked ? (
-                          <div className="text-xs mt-1">Booked</div>
+                        {isPastOrBooked ? (
+                          <div className="text-xs mt-1">
+                            {!slot.available ? "Past" : "Booked"}
+                          </div>
                         ) : (
                           !isBlocked && (
                             <div className="text-xs mt-1 opacity-70">

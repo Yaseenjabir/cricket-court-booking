@@ -148,7 +148,13 @@ const AdminNewBooking = () => {
 
       for (const slot of slotsToCheck) {
         const [hour] = slot.split(":").map(Number);
-        const endHour = hour + 1;
+        let endHour = hour + 1;
+
+        // Handle midnight boundary (24:00 -> 00:00)
+        if (endHour >= 24) {
+          endHour = endHour - 24;
+        }
+
         const endTime = `${endHour.toString().padStart(2, "0")}:00`;
 
         try {
@@ -675,10 +681,6 @@ const AdminNewBooking = () => {
                 </>
               )}
             </Button>
-
-            <p className="text-xs text-muted-foreground text-center mt-4">
-              Admin bookings bypass availability checks
-            </p>
           </div>
         </div>
       </div>

@@ -95,7 +95,10 @@ const Booking = () => {
 
   // Fetch booked slots for selected court and date
   const fetchBookedSlots = async () => {
-    if (!selectedCourt || !selectedDate) return;
+    // Don't fetch if court hasn't been selected yet or is empty
+    if (!selectedCourt || selectedCourt === "" || !selectedDate) {
+      return;
+    }
 
     try {
       setLoadingSlots(true);
@@ -119,7 +122,13 @@ const Booking = () => {
 
       for (const slot of slotsToCheck) {
         const [hour] = slot.split(":").map(Number);
-        const endHour = hour + 1;
+        let endHour = hour + 1;
+
+        // Handle midnight boundary (24:00 -> 00:00)
+        if (endHour >= 24) {
+          endHour = endHour - 24;
+        }
+
         const endTime = `${endHour.toString().padStart(2, "0")}:00`;
 
         try {

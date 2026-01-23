@@ -28,6 +28,7 @@ import AdminNewBooking from "./pages/admin/AdminNewBooking";
 import AdminPromos from "./pages/admin/AdminPromos";
 import ScrollToTop from "./pages/ScrollToTop";
 import PublicRoute from "./components/routes/PublicRoute";
+import AdminCalendar from "./pages/admin/AdminCalendar";
 
 const queryClient = new QueryClient();
 
@@ -63,7 +64,7 @@ const App = () => (
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<AdminDashboard />} />
-            {/* <Route path="calendar" element={<AdminCalendar />} /> */}
+            <Route path="calendar" element={<AdminCalendar />} />
             <Route path="courts" element={<AdminCourts />} />
             <Route path="pricing" element={<AdminPricing />} />
             <Route path="bookings" element={<AdminBookings />} />

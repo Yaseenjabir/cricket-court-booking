@@ -20,7 +20,7 @@ interface ApiResponse<T> {
 // Generic API call function
 async function apiCall<T>(
   endpoint: string,
-  options?: RequestInit,
+  options?: RequestInit
 ): Promise<ApiResponse<T>> {
   try {
     const response = await fetch(`${API_URL}${endpoint}`, {
@@ -47,7 +47,7 @@ async function apiCall<T>(
 // Generic API call function for admin routes (with authentication)
 async function adminApiCall<T>(
   endpoint: string,
-  options?: RequestInit,
+  options?: RequestInit
 ): Promise<ApiResponse<T>> {
   const token = Cookies.get("admin_token");
 
@@ -101,7 +101,7 @@ export const bookingApi = {
       {
         method: "POST",
         body: JSON.stringify(params),
-      },
+      }
     ),
 
   create: (data: BookingCreateData) =>
@@ -163,6 +163,24 @@ export const adminApi = {
       adminApiCall<Booking>(`/bookings/${id}/cancel`, {
         method: "PATCH",
       }),
+
+    updateStatus: (id: string, status: string) =>
+      adminApiCall<Booking>(`/bookings/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }),
+
+    updatePayment: (id: string, paymentStatus: string) =>
+      adminApiCall<Booking>(`/bookings/${id}/payment`, {
+        method: "PATCH",
+        body: JSON.stringify({ paymentStatus }),
+      }),
+
+    delete: (id: string) =>
+      adminApiCall<{ message: string }>(`/bookings/${id}`, {
+        method: "DELETE",
+      }),
+
     createManual: (data: {
       courtId: string;
       bookingDate: string;

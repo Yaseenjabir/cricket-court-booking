@@ -40,7 +40,7 @@ const AdminSidebar = () => {
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
-    // { icon: Calendar, label: "Calendar", href: "/admin/calendar" },
+    { icon: Calendar, label: "Calendar", href: "/admin/calendar" },
     { icon: ClipboardList, label: "Bookings", href: "/admin/bookings" },
     { icon: MapPin, label: "Courts", href: "/admin/courts" },
     { icon: DollarSign, label: "Pricing", href: "/admin/pricing" },

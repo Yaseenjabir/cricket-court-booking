@@ -7,8 +7,7 @@ import {
   Filter,
   Download,
   Eye,
-  Edit,
-  XCircle,
+  X,
   Plus,
   ChevronLeft,
   ChevronRight,
@@ -34,25 +33,39 @@ import { format } from "date-fns";
 type AdminBooking = {
   _id: string;
   customer: {
-    _id: string;
+    _id?: string;
     name: string;
     phone: string;
     email?: string;
+    id?: string;
   } | null;
   court: {
-    _id: string;
+    _id?: string;
     name: string;
     description?: string;
+    id?: string;
   };
   bookingDate: string;
   startTime: string;
   endTime: string;
-  totalAmount: number;
-  status: "confirmed" | "pending" | "completed" | "cancelled";
-  paymentStatus: "paid" | "partial" | "unpaid" | "refunded";
+  durationHours?: number;
+  totalPrice: number;
+  finalPrice: number;
+  pricingBreakdown?: any[];
+  discountAmount?: number;
+  amountPaid?: number;
+  status:
+    | "confirmed"
+    | "pending"
+    | "completed"
+    | "cancelled"
+    | "no-show"
+    | "blocked";
+  paymentStatus: "paid" | "partial" | "pending" | "refunded";
   isBlocked?: boolean;
   notes?: string;
   createdAt: string;
+  updatedAt?: string;
   createdBy: "customer" | "admin";
 };
 
@@ -61,11 +74,18 @@ const AdminBookings = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedBooking, setSelectedBooking] = useState<AdminBooking | null>(
-    null,
+    null
   );
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [cancelling, setCancelling] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [bookingToDelete, setBookingToDelete] = useState<string | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Fetch bookings on mount
   useEffect(() => {
@@ -73,8 +93,8 @@ const AdminBookings = () => {
       try {
         setLoading(true);
         const response = await adminApi.bookings.getAll();
+
         if (response.success && response.data) {
-          // API returns { bookings, pagination }
           const data = response.data as unknown;
           const dataObj = data as
             | { bookings?: AdminBooking[] }
@@ -82,10 +102,11 @@ const AdminBookings = () => {
           const bookingsData = Array.isArray(dataObj)
             ? dataObj
             : dataObj.bookings || [];
+
           setBookings(bookingsData);
         }
       } catch (error) {
-        console.error("Failed to fetch bookings:", error);
+        console.error("❌ Failed to fetch bookings:", error);
         toast({
           title: "Error",
           description: "Failed to load bookings",
@@ -99,25 +120,43 @@ const AdminBookings = () => {
     fetchBookings();
   }, [toast]);
 
-  const handleCancelBooking = async (bookingId: string) => {
+  const handleDeleteBooking = async () => {
+    if (!bookingToDelete) return;
+
     try {
-      setCancelling(bookingId);
-      const response = await adminApi.bookings.cancel(bookingId);
+      setDeleting(bookingToDelete);
+
+      // Call the cancel API endpoint instead of delete
+      const response = await adminApi.bookings.updateStatus(
+        bookingToDelete,
+        "cancelled"
+      );
+
       if (response.success) {
-        // Update local state
+        // Update the booking status in the list
         setBookings((prev) =>
           prev.map((b) =>
-            b._id === bookingId ? { ...b, status: "cancelled" as const } : b,
-          ),
+            b._id === bookingToDelete ? { ...b, status: "cancelled" as any } : b
+          )
         );
+
+        // Update selected booking if it's the one being cancelled
+        if (selectedBooking?._id === bookingToDelete) {
+          setSelectedBooking({
+            ...selectedBooking,
+            status: "cancelled" as any,
+          });
+        }
+
         toast({
           title: "Success",
           description: "Booking cancelled successfully",
         });
-        setSelectedBooking(null);
+        setIsDeleteDialogOpen(false);
+        setBookingToDelete(null);
       }
     } catch (error) {
-      console.error("Failed to cancel booking:", error);
+      console.error("❌ Failed to cancel booking:", error);
       toast({
         title: "Error",
         description:
@@ -125,7 +164,112 @@ const AdminBookings = () => {
         variant: "destructive",
       });
     } finally {
-      setCancelling(null);
+      setDeleting(null);
+    }
+  };
+
+  const handleUpdateBookingStatus = async (
+    bookingId: string,
+    newStatus: string
+  ) => {
+    try {
+      setUpdatingStatus(true);
+
+      const response = await adminApi.bookings.updateStatus(
+        bookingId,
+        newStatus
+      );
+
+      if (response.success) {
+        setBookings((prev) =>
+          prev.map((b) =>
+            b._id === bookingId ? { ...b, status: newStatus as any } : b
+          )
+        );
+        if (selectedBooking?._id === bookingId) {
+          setSelectedBooking({ ...selectedBooking, status: newStatus as any });
+        }
+        toast({
+          title: "Success",
+          description: "Booking status updated",
+        });
+      }
+    } catch (error) {
+      console.error("❌ Failed to update booking status:", error);
+
+      // Reset the select to the original value
+      if (selectedBooking) {
+        // Force re-render of the select by temporarily clearing and restoring
+        const original = selectedBooking.status;
+        setSelectedBooking({ ...selectedBooking, status: newStatus as any });
+        setTimeout(() => {
+          setSelectedBooking({ ...selectedBooking, status: original });
+        }, 0);
+      }
+
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to update status",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handleUpdatePaymentStatus = async (
+    bookingId: string,
+    newStatus: string
+  ) => {
+    try {
+      setUpdatingStatus(true);
+      const response = await adminApi.bookings.updatePayment(
+        bookingId,
+        newStatus
+      );
+      if (response.success) {
+        setBookings((prev) =>
+          prev.map((b) =>
+            b._id === bookingId ? { ...b, paymentStatus: newStatus as any } : b
+          )
+        );
+        if (selectedBooking?._id === bookingId) {
+          setSelectedBooking({
+            ...selectedBooking,
+            paymentStatus: newStatus as any,
+          });
+        }
+        toast({
+          title: "Success",
+          description: "Payment status updated",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to update payment status:", error);
+
+      // Reset the select to the original value
+      if (selectedBooking) {
+        const original = selectedBooking.paymentStatus;
+        setSelectedBooking({
+          ...selectedBooking,
+          paymentStatus: newStatus as any,
+        });
+        setTimeout(() => {
+          setSelectedBooking({ ...selectedBooking, paymentStatus: original });
+        }, 0);
+      }
+
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to update payment status",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
@@ -149,7 +293,7 @@ const AdminBookings = () => {
     const [startHours] = startTime.split(":").map(Number);
     const [endHours] = endTime.split(":").map(Number);
     let duration = endHours - startHours;
-    if (duration < 0) duration += 24; // Handle overnight
+    if (duration < 0) duration += 24;
     return `${duration}h`;
   };
 
@@ -162,6 +306,23 @@ const AdminBookings = () => {
       statusFilter === "all" || booking.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentBookings = filteredBookings.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  // Helper to check if booking is blocked based on status
+  const isBookingBlocked = (booking: AdminBooking) => {
+    return booking.status === "blocked" || booking.isBlocked;
+  };
 
   return (
     <div className="flex flex-col w-full">
@@ -191,7 +352,7 @@ const AdminBookings = () => {
         </div>
       </div>
 
-      {/* Scrollable Content - NO horizontal scroll here */}
+      {/* Scrollable Content */}
       <div className="flex-1 p-4 lg:p-6 w-full">
         {/* Filters */}
         <div className="bg-card rounded-xl border p-4 mb-6">
@@ -216,13 +377,15 @@ const AdminBookings = () => {
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
                 <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="no-show">No Show</SelectItem>
+                <SelectItem value="blocked">Blocked</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        {/* Bookings Table - Scroll ONLY inside here */}
-        <div className="bg-card w-full overflow-x-scroll rounded-xl">
+        {/* Bookings Table */}
+        <div className="bg-card w-full overflow-x-auto rounded-xl border">
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -233,40 +396,37 @@ const AdminBookings = () => {
             </div>
           ) : (
             <>
-              <table className="w-full">
+              <table className="w-full min-w-[900px]">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap w-[140px]">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">
                       Booking ID
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap w-[180px]">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">
                       Customer
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap w-[100px]">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">
                       Court
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap w-[160px]">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">
                       Date & Time
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap w-[100px]">
-                      Created By
-                    </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap w-[120px]">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">
                       Status
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap w-[110px]">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">
                       Payment
                     </th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap w-[100px]">
+                    <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">
                       Amount
                     </th>
-                    <th className="text-center px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap w-[120px]">
+                    <th className="text-center px-4 py-3 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredBookings.map((booking) => (
+                  {currentBookings.map((booking) => (
                     <tr
                       key={booking._id}
                       className="hover:bg-muted/30 transition-colors"
@@ -277,7 +437,7 @@ const AdminBookings = () => {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        {booking.isBlocked ? (
+                        {isBookingBlocked(booking) ? (
                           <p className="font-medium text-sm text-warning truncate max-w-[150px]">
                             🔒 Blocked Slot
                           </p>
@@ -307,26 +467,17 @@ const AdminBookings = () => {
                       <td className="px-4 py-3">
                         <span
                           className={`text-xs font-medium px-2 py-1 rounded whitespace-nowrap ${
-                            booking.createdBy === "admin"
-                              ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                              : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
-                          }`}
-                        >
-                          {booking.createdBy === "admin"
-                            ? "👤 Admin"
-                            : "🌐 Customer"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`status-badge ${
                             booking.status === "confirmed"
-                              ? "status-confirmed"
-                              : booking.status === "pending"
-                                ? "status-pending"
-                                : booking.status === "completed"
-                                  ? "status-completed"
-                                  : "status-cancelled"
+                              ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                              : booking.status === "completed"
+                              ? "bg-success/10 text-success"
+                              : booking.status === "cancelled"
+                              ? "bg-destructive/10 text-destructive"
+                              : booking.status === "no-show"
+                              ? "bg-orange-500/10 text-orange-600 dark:text-orange-400"
+                              : booking.status === "blocked"
+                              ? "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                              : "bg-warning/10 text-warning"
                           }`}
                         >
                           {booking.status}
@@ -338,39 +489,42 @@ const AdminBookings = () => {
                             booking.paymentStatus === "paid"
                               ? "bg-success/10 text-success"
                               : booking.paymentStatus === "partial"
-                                ? "bg-warning/10 text-warning"
-                                : booking.paymentStatus === "refunded"
-                                  ? "bg-secondary/10 text-secondary"
-                                  : "bg-destructive/10 text-destructive"
+                              ? "bg-warning/10 text-warning"
+                              : booking.paymentStatus === "refunded"
+                              ? "bg-secondary/10 text-secondary"
+                              : "bg-destructive/10 text-destructive"
                           }`}
                         >
                           {booking.paymentStatus}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm font-medium text-foreground text-right whitespace-nowrap">
-                        {booking.totalAmount} SAR
+                        {booking.finalPrice} SAR
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-1">
                           <button
                             onClick={() => setSelectedBooking(booking)}
                             className="p-2 rounded-lg hover:bg-muted transition-colors"
-                            title="View"
+                            title="View Details"
                           >
                             <Eye className="w-4 h-4 text-muted-foreground" />
                           </button>
                           {booking.status !== "cancelled" &&
                             booking.status !== "completed" && (
                               <button
-                                onClick={() => handleCancelBooking(booking._id)}
-                                disabled={cancelling === booking._id}
+                                onClick={() => {
+                                  setBookingToDelete(booking._id);
+                                  setIsDeleteDialogOpen(true);
+                                }}
+                                disabled={deleting === booking._id}
                                 className="p-2 rounded-lg hover:bg-destructive/10 transition-colors disabled:opacity-50"
-                                title="Cancel"
+                                title="Cancel Booking"
                               >
-                                {cancelling === booking._id ? (
+                                {deleting === booking._id ? (
                                   <Loader2 className="w-4 h-4 text-destructive animate-spin" />
                                 ) : (
-                                  <XCircle className="w-4 h-4 text-destructive" />
+                                  <X className="w-4 h-4 text-destructive" />
                                 )}
                               </button>
                             )}
@@ -384,27 +538,99 @@ const AdminBookings = () => {
               {/* Pagination */}
               <div className="px-4 py-3 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
                 <p className="text-xs text-muted-foreground">
-                  Showing 1-{filteredBookings.length} of{" "}
+                  Showing {startIndex + 1}-
+                  {Math.min(endIndex, filteredBookings.length)} of{" "}
                   {filteredBookings.length} bookings
                 </p>
                 <div className="flex items-center gap-1">
-                  <Button variant="outline" size="sm" disabled>
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="bg-primary text-primary-foreground min-w-[32px]"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
                   >
-                    1
+                    <ChevronLeft className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" size="sm" className="min-w-[32px]">
-                    2
-                  </Button>
-                  <Button variant="outline" size="sm" className="min-w-[32px]">
-                    3
-                  </Button>
-                  <Button variant="outline" size="sm">
+
+                  {totalPages <= 5 ? (
+                    // Show all pages if 5 or less
+                    Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <Button
+                          key={page}
+                          variant="outline"
+                          size="sm"
+                          className={`min-w-[32px] ${
+                            currentPage === page
+                              ? "bg-primary text-primary-foreground"
+                              : ""
+                          }`}
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </Button>
+                      )
+                    )
+                  ) : (
+                    // Smart pagination for more than 5 pages
+                    <>
+                      {currentPage > 2 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="min-w-[32px]"
+                          onClick={() => handlePageChange(1)}
+                        >
+                          1
+                        </Button>
+                      )}
+                      {currentPage > 3 && (
+                        <span className="px-1 text-muted-foreground">...</span>
+                      )}
+
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(
+                          (page) =>
+                            page >= currentPage - 1 && page <= currentPage + 1
+                        )
+                        .map((page) => (
+                          <Button
+                            key={page}
+                            variant="outline"
+                            size="sm"
+                            className={`min-w-[32px] ${
+                              currentPage === page
+                                ? "bg-primary text-primary-foreground"
+                                : ""
+                            }`}
+                            onClick={() => handlePageChange(page)}
+                          >
+                            {page}
+                          </Button>
+                        ))}
+
+                      {currentPage < totalPages - 2 && (
+                        <span className="px-1 text-muted-foreground">...</span>
+                      )}
+                      {currentPage < totalPages - 1 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="min-w-[32px]"
+                          onClick={() => handlePageChange(totalPages)}
+                        >
+                          {totalPages}
+                        </Button>
+                      )}
+                    </>
+                  )}
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
@@ -413,6 +639,47 @@ const AdminBookings = () => {
           )}
         </div>
       </div>
+
+      {/* Cancel Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cancel Booking</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to cancel this booking? The status will be
+            changed to "cancelled".
+          </p>
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={handleDeleteBooking}
+              disabled={!!deleting}
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Cancelling...
+                </>
+              ) : (
+                "Cancel Booking"
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setIsDeleteDialogOpen(false);
+                setBookingToDelete(null);
+              }}
+              disabled={!!deleting}
+            >
+              Go Back
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Booking Details Modal */}
       <Dialog
@@ -446,37 +713,7 @@ const AdminBookings = () => {
                       : "🌐 Customer"}
                   </span>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Created By</p>
-                  <span
-                    className={`text-xs font-medium px-2 py-1 rounded inline-block ${
-                      selectedBooking.createdBy === "admin"
-                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                        : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
-                    }`}
-                  >
-                    {selectedBooking.createdBy === "admin"
-                      ? "👤 Admin"
-                      : "🌐 Customer"}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  <span
-                    className={`status-badge ${
-                      selectedBooking.status === "confirmed"
-                        ? "status-confirmed"
-                        : selectedBooking.status === "pending"
-                          ? "status-pending"
-                          : selectedBooking.status === "completed"
-                            ? "status-completed"
-                            : "status-cancelled"
-                    }`}
-                  >
-                    {selectedBooking.status}
-                  </span>
-                </div>
-                {selectedBooking.isBlocked ? (
+                {isBookingBlocked(selectedBooking) ? (
                   <div className="col-span-2">
                     <p className="text-sm text-muted-foreground">Type</p>
                     <p className="font-medium text-sm text-warning">
@@ -498,7 +735,7 @@ const AdminBookings = () => {
                       </p>
                     </div>
                     {selectedBooking.customer?.email && (
-                      <div>
+                      <div className="col-span-2">
                         <p className="text-sm text-muted-foreground">Email</p>
                         <p className="font-medium text-sm truncate">
                           {selectedBooking.customer.email}
@@ -531,15 +768,86 @@ const AdminBookings = () => {
                   <p className="font-medium text-sm">
                     {calculateDuration(
                       selectedBooking.startTime,
-                      selectedBooking.endTime,
+                      selectedBooking.endTime
                     )}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Amount</p>
-                  <p className="font-medium text-success text-sm">
-                    {selectedBooking.totalAmount} SAR
+                  <p className="text-sm text-muted-foreground">Total Amount</p>
+                  <p className="font-medium text-sm">
+                    {selectedBooking.totalPrice} SAR
                   </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Final Amount</p>
+                  <p className="font-medium text-success text-sm">
+                    {selectedBooking.finalPrice} SAR
+                  </p>
+                </div>
+                {selectedBooking.discountAmount &&
+                  selectedBooking.discountAmount > 0 && (
+                    <div className="col-span-2">
+                      <p className="text-sm text-muted-foreground">Discount</p>
+                      <p className="font-medium text-sm text-green-600">
+                        -{selectedBooking.discountAmount} SAR
+                      </p>
+                    </div>
+                  )}
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Booking Status
+                  </p>
+                  <Select
+                    value={selectedBooking.status}
+                    onValueChange={(value) =>
+                      handleUpdateBookingStatus(selectedBooking._id, value)
+                    }
+                    disabled={
+                      updatingStatus ||
+                      selectedBooking.status === "cancelled" ||
+                      selectedBooking.status === "completed"
+                    }
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="no-show">No Show</SelectItem>
+                      <SelectItem value="blocked">Blocked</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {(selectedBooking.status === "cancelled" ||
+                    selectedBooking.status === "completed") && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Cannot update {selectedBooking.status} bookings
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Payment Status
+                  </p>
+                  <Select
+                    value={selectedBooking.paymentStatus}
+                    onValueChange={(value) =>
+                      handleUpdatePaymentStatus(selectedBooking._id, value)
+                    }
+                    disabled={updatingStatus}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="partial">Partial</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="refunded">Refunded</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 {selectedBooking.notes && (
                   <div className="col-span-2">
@@ -550,30 +858,32 @@ const AdminBookings = () => {
                   </div>
                 )}
               </div>
-              <div className="flex gap-3 pt-4">
-                {selectedBooking.status !== "cancelled" &&
-                  selectedBooking.status !== "completed" && (
+
+              {/* Action Buttons */}
+              {selectedBooking.status !== "cancelled" &&
+                selectedBooking.status !== "completed" && (
+                  <div className="flex gap-3 pt-4 border-t mt-4">
                     <Button
                       variant="destructive"
-                      className="flex-1"
-                      size="sm"
-                      onClick={() => handleCancelBooking(selectedBooking._id)}
-                      disabled={cancelling === selectedBooking._id}
+                      className="w-full"
+                      onClick={() => {
+                        setBookingToDelete(selectedBooking._id);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                      disabled={updatingStatus}
                     >
-                      {cancelling === selectedBooking._id ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Cancelling...
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="w-4 h-4" />
-                          Cancel
-                        </>
-                      )}
+                      Cancel This Booking
                     </Button>
-                  )}
-              </div>
+                  </div>
+                )}
+
+              {selectedBooking.status === "cancelled" && (
+                <div className="pt-4 border-t mt-4">
+                  <p className="text-sm text-center text-muted-foreground">
+                    ❌ This booking has been cancelled
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>

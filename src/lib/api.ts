@@ -10,6 +10,68 @@ import {
   PromoCodeCreateData,
 } from "@/types/booking.types";
 
+// Calendar-specific booking interface
+interface CalendarBooking {
+  id: string;
+  bookingId: string;
+  court: number;
+  courtName: string;
+  bookingDate: string;
+  startHour: number;
+  duration: number;
+  customer: string;
+  status: "confirmed" | "pending" | "completed" | "cancelled" | "blocked";
+  amount: string;
+}
+
+// Dashboard types
+interface DashboardStats {
+  bookings: { value: number; change: number; trend: "up" | "down" };
+  revenue: {
+    value: number;
+    currency: string;
+    change: number;
+    trend: "up" | "down";
+  };
+  utilization: { value: number; change: number; trend: "up" | "down" };
+  customers: { value: number; change: number; trend: "up" | "down" };
+}
+
+interface DashboardBooking {
+  id: string;
+  bookingId: string;
+  customer: string;
+  court: string;
+  time: string;
+  status: string;
+  amount: string;
+  paymentStatus?: string;
+}
+
+interface CourtUtilization {
+  court: string;
+  utilization: number;
+  bookedHours: number;
+  bookingsCount: number;
+}
+
+interface RevenueSummary {
+  summary: {
+    totalRevenue: number;
+    totalBookings: number;
+    totalPaid: number;
+    totalPending: number;
+    averageBookingValue: number;
+  };
+  daily: Array<{
+    _id: string;
+    totalRevenue: number;
+    bookingsCount: number;
+    paidAmount: number;
+    pendingAmount: number;
+  }>;
+}
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -20,7 +82,7 @@ interface ApiResponse<T> {
 // Generic API call function
 async function apiCall<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<ApiResponse<T>> {
   try {
     const response = await fetch(`${API_URL}${endpoint}`, {
@@ -47,7 +109,7 @@ async function apiCall<T>(
 // Generic API call function for admin routes (with authentication)
 async function adminApiCall<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<ApiResponse<T>> {
   const token = Cookies.get("admin_token");
 
@@ -101,7 +163,7 @@ export const bookingApi = {
       {
         method: "POST",
         body: JSON.stringify(params),
-      }
+      },
     ),
 
   create: (data: BookingCreateData) =>
@@ -159,6 +221,10 @@ export const adminApi = {
   bookings: {
     getAll: () => adminApiCall<Booking[]>("/bookings"),
     getById: (id: string) => adminApiCall<Booking>(`/bookings/${id}`),
+    getCalendar: (params: { startDate: string; endDate: string }) =>
+      adminApiCall<CalendarBooking[]>(
+        `/bookings/calendar?startDate=${params.startDate}&endDate=${params.endDate}`,
+      ),
     cancel: (id: string) =>
       adminApiCall<Booking>(`/bookings/${id}/cancel`, {
         method: "PATCH",
@@ -235,5 +301,29 @@ export const adminApi = {
       adminApiCall<PromoCode>(`/promo-codes/${id}/toggle`, {
         method: "PATCH",
       }),
+  },
+
+  // Dashboard
+  dashboard: {
+    getStats: (date?: string) =>
+      adminApiCall<DashboardStats>(
+        `/dashboard/stats${date ? `?date=${date}` : ""}`,
+      ),
+    getBookings: (date?: string) =>
+      adminApiCall<DashboardBooking[]>(
+        `/dashboard/bookings${date ? `?date=${date}` : ""}`,
+      ),
+    getCourtUtilization: (date?: string) =>
+      adminApiCall<CourtUtilization[]>(
+        `/dashboard/court-utilization${date ? `?date=${date}` : ""}`,
+      ),
+    getRevenueSummary: (startDate?: string, endDate?: string) => {
+      const params = new URLSearchParams();
+      if (startDate) params.append("startDate", startDate);
+      if (endDate) params.append("endDate", endDate);
+      return adminApiCall<RevenueSummary>(
+        `/dashboard/revenue-summary${params.toString() ? `?${params.toString()}` : ""}`,
+      );
+    },
   },
 };

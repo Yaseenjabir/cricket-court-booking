@@ -374,9 +374,9 @@ const AdminNewBooking = () => {
       const startTime = sortedSlots[0];
       const endTime = sortedSlots[sortedSlots.length - 1];
 
-      // Calculate end time (add 1 hour to last slot)
+      // Calculate end time (add 1 hour to last slot, wrap around at midnight)
       const [endHour, endMinute] = endTime.split(":").map(Number);
-      const actualEndTime = `${(endHour + 1)
+      const actualEndTime = `${((endHour + 1) % 24)
         .toString()
         .padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
 

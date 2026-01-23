@@ -453,7 +453,7 @@ const AdminBookings = () => {
                         )}
                       </td>
                       <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
-                        {booking.court.name}
+                        {booking.court?.name || "N/A"}
                       </td>
                       <td className="px-4 py-3">
                         <p className="text-sm text-foreground whitespace-nowrap">
@@ -747,7 +747,7 @@ const AdminBookings = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Court</p>
                   <p className="font-medium text-sm">
-                    {selectedBooking.court.name}
+                    {selectedBooking.court?.name || "N/A"}
                   </p>
                 </div>
                 <div>

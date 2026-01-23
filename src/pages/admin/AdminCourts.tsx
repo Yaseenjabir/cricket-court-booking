@@ -99,7 +99,7 @@ const AdminCourts = () => {
     image: null,
   });
   const [editImagePreview, setEditImagePreview] = useState("");
-
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingCourtId, setDeletingCourtId] = useState<string | null>(null);
 
@@ -363,6 +363,8 @@ const AdminCourts = () => {
     const token = Cookies.get("admin_token");
 
     try {
+      setIsDeleting(true); // ADD THIS LINE
+
       const response = await fetch(
         `${API_URL}${DELETE_COURT_URL(deletingCourtId)}`,
         {
@@ -393,6 +395,7 @@ const AdminCourts = () => {
         variant: "destructive",
       });
     } finally {
+      setIsDeleting(false); // ADD THIS LINE
       setIsDeleteModalOpen(false);
       setDeletingCourtId(null);
     }
@@ -688,13 +691,22 @@ const AdminCourts = () => {
                   variant="destructive"
                   className="flex-1"
                   onClick={deleteCourt}
+                  disabled={isDeleting}
                 >
-                  Delete
+                  {isDeleting ? ( // ADD THIS CONDITIONAL
+                    <>
+                      <Loader className="w-4 h-4 animate-spin mr-2" />
+                      Deleting...
+                    </>
+                  ) : (
+                    "Delete"
+                  )}
                 </Button>
                 <Button
                   variant="outline"
                   className="flex-1"
                   onClick={() => setIsDeleteModalOpen(false)}
+                  disabled={isDeleting} // ADD THIS
                 >
                   Cancel
                 </Button>

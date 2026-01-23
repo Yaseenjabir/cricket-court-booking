@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Loader,
 } from "lucide-react";
 import {
   Dialog,
@@ -74,7 +75,7 @@ const AdminBookings = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedBooking, setSelectedBooking] = useState<AdminBooking | null>(
-    null
+    null,
   );
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,15 +130,17 @@ const AdminBookings = () => {
       // Call the cancel API endpoint instead of delete
       const response = await adminApi.bookings.updateStatus(
         bookingToDelete,
-        "cancelled"
+        "cancelled",
       );
 
       if (response.success) {
         // Update the booking status in the list
         setBookings((prev) =>
           prev.map((b) =>
-            b._id === bookingToDelete ? { ...b, status: "cancelled" as any } : b
-          )
+            b._id === bookingToDelete
+              ? { ...b, status: "cancelled" as any }
+              : b,
+          ),
         );
 
         // Update selected booking if it's the one being cancelled
@@ -170,21 +173,21 @@ const AdminBookings = () => {
 
   const handleUpdateBookingStatus = async (
     bookingId: string,
-    newStatus: string
+    newStatus: string,
   ) => {
     try {
       setUpdatingStatus(true);
 
       const response = await adminApi.bookings.updateStatus(
         bookingId,
-        newStatus
+        newStatus,
       );
 
       if (response.success) {
         setBookings((prev) =>
           prev.map((b) =>
-            b._id === bookingId ? { ...b, status: newStatus as any } : b
-          )
+            b._id === bookingId ? { ...b, status: newStatus as any } : b,
+          ),
         );
         if (selectedBooking?._id === bookingId) {
           setSelectedBooking({ ...selectedBooking, status: newStatus as any });
@@ -220,19 +223,19 @@ const AdminBookings = () => {
 
   const handleUpdatePaymentStatus = async (
     bookingId: string,
-    newStatus: string
+    newStatus: string,
   ) => {
     try {
       setUpdatingStatus(true);
       const response = await adminApi.bookings.updatePayment(
         bookingId,
-        newStatus
+        newStatus,
       );
       if (response.success) {
         setBookings((prev) =>
           prev.map((b) =>
-            b._id === bookingId ? { ...b, paymentStatus: newStatus as any } : b
-          )
+            b._id === bookingId ? { ...b, paymentStatus: newStatus as any } : b,
+          ),
         );
         if (selectedBooking?._id === bookingId) {
           setSelectedBooking({
@@ -388,7 +391,7 @@ const AdminBookings = () => {
         <div className="bg-card w-full overflow-x-auto rounded-xl border">
           {loading ? (
             <div className="flex justify-center items-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              <Loader className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
           ) : bookings.length === 0 ? (
             <div className="text-center py-12">
@@ -470,14 +473,14 @@ const AdminBookings = () => {
                             booking.status === "confirmed"
                               ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                               : booking.status === "completed"
-                              ? "bg-success/10 text-success"
-                              : booking.status === "cancelled"
-                              ? "bg-destructive/10 text-destructive"
-                              : booking.status === "no-show"
-                              ? "bg-orange-500/10 text-orange-600 dark:text-orange-400"
-                              : booking.status === "blocked"
-                              ? "bg-purple-500/10 text-purple-600 dark:text-purple-400"
-                              : "bg-warning/10 text-warning"
+                                ? "bg-success/10 text-success"
+                                : booking.status === "cancelled"
+                                  ? "bg-destructive/10 text-destructive"
+                                  : booking.status === "no-show"
+                                    ? "bg-orange-500/10 text-orange-600 dark:text-orange-400"
+                                    : booking.status === "blocked"
+                                      ? "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                                      : "bg-warning/10 text-warning"
                           }`}
                         >
                           {booking.status}
@@ -489,10 +492,10 @@ const AdminBookings = () => {
                             booking.paymentStatus === "paid"
                               ? "bg-success/10 text-success"
                               : booking.paymentStatus === "partial"
-                              ? "bg-warning/10 text-warning"
-                              : booking.paymentStatus === "refunded"
-                              ? "bg-secondary/10 text-secondary"
-                              : "bg-destructive/10 text-destructive"
+                                ? "bg-warning/10 text-warning"
+                                : booking.paymentStatus === "refunded"
+                                  ? "bg-secondary/10 text-secondary"
+                                  : "bg-destructive/10 text-destructive"
                           }`}
                         >
                           {booking.paymentStatus}
@@ -522,7 +525,7 @@ const AdminBookings = () => {
                                 title="Cancel Booking"
                               >
                                 {deleting === booking._id ? (
-                                  <Loader2 className="w-4 h-4 text-destructive animate-spin" />
+                                  <Loader className="w-4 h-4 text-destructive animate-spin" />
                                 ) : (
                                   <X className="w-4 h-4 text-destructive" />
                                 )}
@@ -569,7 +572,7 @@ const AdminBookings = () => {
                         >
                           {page}
                         </Button>
-                      )
+                      ),
                     )
                   ) : (
                     // Smart pagination for more than 5 pages
@@ -591,7 +594,7 @@ const AdminBookings = () => {
                       {Array.from({ length: totalPages }, (_, i) => i + 1)
                         .filter(
                           (page) =>
-                            page >= currentPage - 1 && page <= currentPage + 1
+                            page >= currentPage - 1 && page <= currentPage + 1,
                         )
                         .map((page) => (
                           <Button
@@ -659,7 +662,7 @@ const AdminBookings = () => {
             >
               {deleting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  <Loader className="w-4 h-4 animate-spin mr-2" />
                   Cancelling...
                 </>
               ) : (
@@ -686,23 +689,26 @@ const AdminBookings = () => {
         open={!!selectedBooking}
         onOpenChange={() => setSelectedBooking(null)}
       >
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Booking Details</DialogTitle>
+            <DialogTitle className="text-xl">Booking Details</DialogTitle>
           </DialogHeader>
           {selectedBooking && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-6">
+              {/* Header Info */}
+              <div className="flex items-center justify-between pb-4 border-b">
                 <div>
-                  <p className="text-sm text-muted-foreground">Booking ID</p>
-                  <p className="font-mono font-medium text-sm">
-                    {selectedBooking._id.slice(-8).toUpperCase()}
+                  <p className="text-xs text-muted-foreground">Booking ID</p>
+                  <p className="font-mono font-semibold text-lg">
+                    #{selectedBooking._id.slice(-8).toUpperCase()}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Created By</p>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Created By
+                  </p>
                   <span
-                    className={`text-xs font-medium px-2 py-1 rounded inline-block ${
+                    className={`text-xs font-medium px-3 py-1.5 rounded-full inline-block ${
                       selectedBooking.createdBy === "admin"
                         ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                         : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
@@ -713,159 +719,217 @@ const AdminBookings = () => {
                       : "🌐 Customer"}
                   </span>
                 </div>
-                {isBookingBlocked(selectedBooking) ? (
-                  <div className="col-span-2">
-                    <p className="text-sm text-muted-foreground">Type</p>
-                    <p className="font-medium text-sm text-warning">
-                      🔒 Blocked Time Slot
-                    </p>
-                  </div>
-                ) : (
-                  <>
+              </div>
+
+              {/* Customer Information */}
+              {isBookingBlocked(selectedBooking) ? (
+                <div className="bg-warning/10 border border-warning/20 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">🔒</span>
                     <div>
-                      <p className="text-sm text-muted-foreground">Customer</p>
-                      <p className="font-medium text-sm">
+                      <p className="font-semibold text-warning">
+                        Blocked Time Slot
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        This time slot is reserved
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                    Customer Details
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="bg-muted/30 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground mb-1">Name</p>
+                      <p className="font-medium">
                         {selectedBooking.customer?.name || "N/A"}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Phone</p>
-                      <p className="font-medium text-sm">
+                    <div className="bg-muted/30 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground mb-1">
+                        Phone
+                      </p>
+                      <p className="font-medium">
                         {selectedBooking.customer?.phone || "N/A"}
                       </p>
                     </div>
                     {selectedBooking.customer?.email && (
-                      <div className="col-span-2">
-                        <p className="text-sm text-muted-foreground">Email</p>
-                        <p className="font-medium text-sm truncate">
+                      <div className="bg-muted/30 rounded-lg p-3 sm:col-span-2">
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Email
+                        </p>
+                        <p className="font-medium truncate">
                           {selectedBooking.customer.email}
                         </p>
                       </div>
                     )}
-                  </>
-                )}
-                <div>
-                  <p className="text-sm text-muted-foreground">Court</p>
-                  <p className="font-medium text-sm">
-                    {selectedBooking.court?.name || "N/A"}
-                  </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Date</p>
-                  <p className="font-medium text-sm">
-                    {formatDate(selectedBooking.bookingDate)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Time</p>
-                  <p className="font-medium text-sm">
-                    {formatTime(selectedBooking.startTime)} -{" "}
-                    {formatTime(selectedBooking.endTime)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Duration</p>
-                  <p className="font-medium text-sm">
-                    {calculateDuration(
-                      selectedBooking.startTime,
-                      selectedBooking.endTime
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Amount</p>
-                  <p className="font-medium text-sm">
-                    {selectedBooking.totalPrice} SAR
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Final Amount</p>
-                  <p className="font-medium text-success text-sm">
-                    {selectedBooking.finalPrice} SAR
-                  </p>
-                </div>
-                {selectedBooking.discountAmount &&
-                  selectedBooking.discountAmount > 0 && (
-                    <div className="col-span-2">
-                      <p className="text-sm text-muted-foreground">Discount</p>
-                      <p className="font-medium text-sm text-green-600">
-                        -{selectedBooking.discountAmount} SAR
-                      </p>
-                    </div>
-                  )}
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Booking Status
-                  </p>
-                  <Select
-                    value={selectedBooking.status}
-                    onValueChange={(value) =>
-                      handleUpdateBookingStatus(selectedBooking._id, value)
-                    }
-                    disabled={
-                      updatingStatus ||
-                      selectedBooking.status === "cancelled" ||
-                      selectedBooking.status === "completed"
-                    }
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                      <SelectItem value="no-show">No Show</SelectItem>
-                      <SelectItem value="blocked">Blocked</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {(selectedBooking.status === "cancelled" ||
-                    selectedBooking.status === "completed") && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Cannot update {selectedBooking.status} bookings
+              )}
+
+              {/* Booking Information */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                  Booking Information
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-muted/30 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">Court</p>
+                    <p className="font-medium">
+                      {selectedBooking.court?.name || "N/A"}
                     </p>
-                  )}
+                  </div>
+                  <div className="bg-muted/30 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">Date</p>
+                    <p className="font-medium">
+                      {formatDate(selectedBooking.bookingDate)}
+                    </p>
+                  </div>
+                  <div className="bg-muted/30 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">Time</p>
+                    <p className="font-medium">
+                      {formatTime(selectedBooking.startTime)} -{" "}
+                      {formatTime(selectedBooking.endTime)}
+                    </p>
+                  </div>
+                  <div className="bg-muted/30 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Duration
+                    </p>
+                    <p className="font-medium">
+                      {calculateDuration(
+                        selectedBooking.startTime,
+                        selectedBooking.endTime,
+                      )}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Payment Status
-                  </p>
-                  <Select
-                    value={selectedBooking.paymentStatus}
-                    onValueChange={(value) =>
-                      handleUpdatePaymentStatus(selectedBooking._id, value)
-                    }
-                    disabled={updatingStatus}
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="partial">Partial</SelectItem>
-                      <SelectItem value="paid">Paid</SelectItem>
-                      <SelectItem value="refunded">Refunded</SelectItem>
-                    </SelectContent>
-                  </Select>
+              </div>
+
+              {/* Payment Information */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                  Payment Details
+                </h3>
+                <div className="bg-muted/30 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      Total Amount
+                    </span>
+                    <span className="font-semibold">
+                      {selectedBooking.totalPrice} SAR
+                    </span>
+                  </div>
+                  {selectedBooking.discountAmount &&
+                    selectedBooking.discountAmount > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">
+                          Discount
+                        </span>
+                        <span className="font-semibold text-green-600">
+                          -{selectedBooking.discountAmount} SAR
+                        </span>
+                      </div>
+                    )}
+                  <div className="flex justify-between items-center pt-2 border-t">
+                    <span className="font-medium">Final Amount</span>
+                    <span className="font-bold text-lg text-success">
+                      {selectedBooking.finalPrice} SAR
+                    </span>
+                  </div>
                 </div>
-                {selectedBooking.notes && (
-                  <div className="col-span-2">
-                    <p className="text-sm text-muted-foreground">Notes</p>
-                    <p className="font-medium text-sm">
+              </div>
+
+              {/* Status Management */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                  Status Management
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-2 block">
+                      Booking Status
+                    </label>
+                    <Select
+                      value={selectedBooking.status}
+                      onValueChange={(value) =>
+                        handleUpdateBookingStatus(selectedBooking._id, value)
+                      }
+                      disabled={
+                        updatingStatus ||
+                        selectedBooking.status === "cancelled" ||
+                        selectedBooking.status === "completed"
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="confirmed">Confirmed</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                        <SelectItem value="no-show">No Show</SelectItem>
+                        <SelectItem value="blocked">Blocked</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {(selectedBooking.status === "cancelled" ||
+                      selectedBooking.status === "completed") && (
+                      <p className="text-xs text-muted-foreground mt-1.5">
+                        Cannot update {selectedBooking.status} bookings
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-2 block">
+                      Payment Status
+                    </label>
+                    <Select
+                      value={selectedBooking.paymentStatus}
+                      onValueChange={(value) =>
+                        handleUpdatePaymentStatus(selectedBooking._id, value)
+                      }
+                      disabled={updatingStatus}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="partial">Partial</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                        <SelectItem value="refunded">Refunded</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes */}
+              {selectedBooking.notes && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                    Notes
+                  </h3>
+                  <div className="bg-muted/30 rounded-lg p-3">
+                    <p className="text-sm leading-relaxed">
                       {selectedBooking.notes}
                     </p>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Action Buttons */}
               {selectedBooking.status !== "cancelled" &&
                 selectedBooking.status !== "completed" && (
-                  <div className="flex gap-3 pt-4 border-t mt-4">
+                  <div className="pt-4 border-t">
                     <Button
                       variant="destructive"
                       className="w-full"
+                      size="lg"
                       onClick={() => {
                         setBookingToDelete(selectedBooking._id);
                         setIsDeleteDialogOpen(true);
@@ -878,8 +942,8 @@ const AdminBookings = () => {
                 )}
 
               {selectedBooking.status === "cancelled" && (
-                <div className="pt-4 border-t mt-4">
-                  <p className="text-sm text-center text-muted-foreground">
+                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                  <p className="text-sm text-center text-destructive font-medium">
                     ❌ This booking has been cancelled
                   </p>
                 </div>

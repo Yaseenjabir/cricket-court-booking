@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Loader, Loader2 } from "lucide-react";
 import { adminApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -105,7 +105,7 @@ const AdminPricing = () => {
           </h2>
           {loading ? (
             <div className="flex justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              <Loader className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
           ) : pricing ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -149,7 +149,7 @@ const AdminPricing = () => {
         <div className="bg-card rounded-xl border overflow-hidden mb-6">
           {loading ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              <Loader className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
           ) : (
             <div className="overflow-x-auto">

@@ -1,10 +1,43 @@
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Send,
+  Loader2,
+  Loader,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
+const API_URL = import.meta.env.VITE_API_URL;
+const CONTACT_URL = "/contact";
+
+interface ContactFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+}
 const Contact = () => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<ContactFormData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
+  });
+
   const contactInfo = [
     {
       icon: MapPin,
@@ -21,6 +54,99 @@ const Contact = () => {
     },
   ];
 
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Basic validation
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.phone ||
+      !formData.subject ||
+      !formData.message
+    ) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      console.log("Sending to:", `${API_URL}${CONTACT_URL}`);
+      console.log("Form data:", formData);
+
+      const response = await fetch(`${API_URL}${CONTACT_URL}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log("Response status:", response.status);
+
+      const result = await response.json();
+
+      console.log("Response data:", result);
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to send message");
+      }
+
+      if (result.success) {
+        toast({
+          title: "Success!",
+          description: result.message || "Message sent successfully",
+        });
+
+        // Reset form
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          subject: "",
+          message: "",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to send message",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
@@ -45,44 +171,107 @@ const Contact = () => {
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Send us a Message
               </h2>
-              <form className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input id="firstName" placeholder="John" />
+                    <Label htmlFor="firstName">
+                      First Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="firstName"
+                      placeholder="John"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      required
+                    />
                   </div>
                   <div>
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input id="lastName" placeholder="Doe" />
+                    <Label htmlFor="lastName">
+                      Last Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="lastName"
+                      placeholder="Doe"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      required
+                    />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email">
+                    Email Address <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="email"
                     type="email"
                     placeholder="john@example.com"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" placeholder="+966 5X XXX XXXX" />
+                  <Label htmlFor="phone">
+                    Phone Number <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="phone"
+                    placeholder="+966 5X XXX XXXX"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    required
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input id="subject" placeholder="How can we help you?" />
+                  <Label htmlFor="subject">
+                    Subject <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="subject"
+                    placeholder="How can we help you?"
+                    value={formData.subject}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    required
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="message">Message</Label>
+                  <Label htmlFor="message">
+                    Message <span className="text-destructive">*</span>
+                  </Label>
                   <Textarea
                     id="message"
                     placeholder="Tell us more about your inquiry..."
                     rows={5}
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    required
                   />
                 </div>
-                <Button variant="hero" size="lg" className="w-full text-white">
-                  Send Message
-                  <Send className="w-4 h-4" />
+                <Button
+                  type="submit"
+                  variant="hero"
+                  size="lg"
+                  className="w-full text-white"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin mr-2" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      Send Message
+                      <Send className="w-4 h-4 ml-2" />
+                    </>
+                  )}
                 </Button>
               </form>
             </div>
@@ -129,5 +318,4 @@ const Contact = () => {
     </div>
   );
 };
-
 export default Contact;

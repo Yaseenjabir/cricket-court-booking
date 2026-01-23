@@ -13,3 +13,6 @@ export const DELETE_PROMO_CODE_URL = (id: string) => `/promo-codes/${id}`;
 
 // Pricing Url
 export const PRICING_URL = "/pricing";
+
+// Contact Route
+export const CONTACT_URL = "/contact";

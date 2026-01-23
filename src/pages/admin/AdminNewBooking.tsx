@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Search, ArrowLeft, Check, Loader2 } from "lucide-react";
+import { Search, ArrowLeft, Check, Loader2, Loader } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { adminApi, pricingApi, bookingApi } from "@/lib/api";
@@ -506,14 +506,26 @@ const AdminNewBooking = () => {
                       setSelectedSlots([]); // Clear slots when date changes
                     }
                   }}
+                  disabled={(date) =>
+                    date < new Date(new Date().setHours(0, 0, 0, 0))
+                  }
                   className="rounded-md border mt-2 pointer-events-auto"
+                  modifiers={{
+                    today: new Date(),
+                  }}
+                  modifiersClassNames={{
+                    today:
+                      "bg-green-200 text-orange-600 dark:bg-green-900/20 dark:text-orange-400 font-semibold",
+                    selected:
+                      "!bg-transparent rounded !text-orange-600 dark:!text-orange-400 font-bold ",
+                  }}
                 />
               </div>
               <div>
                 <Label>Select Court</Label>
                 {loadingCourts ? (
                   <div className="flex justify-center py-4">
-                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <Loader className="w-6 h-6 animate-spin" />
                   </div>
                 ) : (
                   <Select
@@ -552,11 +564,12 @@ const AdminNewBooking = () => {
               <Label className="mb-2 block">Select Time Slots</Label>
               {loadingPricing ? (
                 <div className="flex justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <Loader
+                   className="w-6 h-6 animate-spin" />
                 </div>
               ) : loadingSlots ? (
                 <div className="flex justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <Loader className="w-6 h-6 animate-spin" />
                   <span className="ml-2 text-sm text-muted-foreground">
                     Loading availability...
                   </span>
@@ -671,7 +684,7 @@ const AdminNewBooking = () => {
             >
               {submitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader className="w-4 h-4 animate-spin" />
                   Creating...
                 </>
               ) : (

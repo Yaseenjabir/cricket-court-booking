@@ -14,6 +14,7 @@ import {
   Loader2,
   X,
   Info,
+  Loader,
 } from "lucide-react";
 import { format } from "date-fns";
 import { promoCodeApi } from "@/lib/api";
@@ -108,7 +109,10 @@ const BookingDetails = () => {
     } catch (error: unknown) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to validate promo code",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to validate promo code",
         variant: "destructive",
       });
     } finally {
@@ -375,7 +379,7 @@ const BookingDetails = () => {
                     >
                       {promoLoading ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader className="w-4 h-4 animate-spin" />
                           Checking...
                         </>
                       ) : (

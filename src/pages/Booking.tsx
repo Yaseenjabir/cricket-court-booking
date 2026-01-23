@@ -8,6 +8,7 @@ import {
   Info,
   Calendar as CalendarIcon,
   Loader2,
+  Loader,
 } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import { courtApi, pricingApi, bookingApi } from "@/lib/api";
@@ -384,13 +385,21 @@ const Booking = () => {
                     if (date) {
                       setSelectedDate(date);
                       setSelectedSlots([]); // Clear slots when date changes
-                      setSlotError(""); // Clear any errors
                     }
                   }}
                   disabled={(date) =>
                     date < new Date(new Date().setHours(0, 0, 0, 0))
                   }
-                  className="rounded-md border pointer-events-auto"
+                  className="rounded-md border mt-2 pointer-events-auto"
+                  modifiers={{
+                    today: new Date(),
+                  }}
+                  modifiersClassNames={{
+                    today:
+                      "bg-green-200 text-orange-600 dark:bg-green-900/20 dark:text-orange-400 font-semibold",
+                    selected:
+                      "!bg-transparent rounded !text-orange-600 dark:!text-orange-400 font-bold ",
+                  }}
                 />
               </div>
               {/* Court Selector */}
@@ -400,7 +409,7 @@ const Booking = () => {
                 </h3>
                 {loadingCourts ? (
                   <div className="flex justify-center py-4">
-                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
                   </div>
                 ) : courts.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
@@ -432,7 +441,7 @@ const Booking = () => {
                 </h3>
                 {loadingPricing ? (
                   <div className="flex justify-center py-4">
-                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -497,11 +506,11 @@ const Booking = () => {
               <div className="p-4">
                 {loadingPricing || !selectedCourt || timeSlots.length === 0 ? (
                   <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                    <Loader className="w-8 h-8 animate-spin text-muted-foreground" />
                   </div>
                 ) : loadingSlots ? (
                   <div className="flex flex-col items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mb-2" />
+                    <Loader className="w-8 h-8 animate-spin text-muted-foreground mb-2" />
                     <span className="text-sm text-muted-foreground">
                       Loading availability...
                     </span>

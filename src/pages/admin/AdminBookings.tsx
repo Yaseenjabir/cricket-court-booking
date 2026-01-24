@@ -354,10 +354,10 @@ const AdminBookings = () => {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="text-xs">
+            {/* <Button variant="outline" size="sm" className="text-xs">
               <Download className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline ml-1">Export</span>
-            </Button>
+            </Button> */}
             <Link to="/admin/bookings/new">
               <Button variant="default" size="sm" className="text-xs">
                 <Plus className="w-3 h-3 sm:w-4 sm:h-4" />

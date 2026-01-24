@@ -143,7 +143,7 @@ const AdminDashboard = () => {
       icon: ClipboardList,
       href: "/admin/bookings/new",
     },
-    { title: "Generate Report", icon: FileText, href: "/admin/reports" },
+    // { title: "Generate Report", icon: FileText, href: "/admin/reports" },
   ];
 
   return (

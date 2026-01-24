@@ -42,6 +42,19 @@ const Courts = () => {
     fetchPricing();
   }, []);
 
+  // Scroll to hash section if present in URL
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      setTimeout(() => {
+        const element = document.querySelector(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    }
+  }, []);
+
   const fetchCourts = async () => {
     setIsLoading(true);
     const API_URL = import.meta.env.VITE_API_URL;
@@ -297,7 +310,7 @@ const Courts = () => {
       </section>
 
       {/* Pricing Overview */}
-      <section className="py-16 bg-background">
+      <section id="pricing" className="py-16 bg-background">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">

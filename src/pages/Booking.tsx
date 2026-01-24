@@ -511,9 +511,17 @@ const Booking = () => {
 
               {/* Price Legend */}
               <div className="mt-6">
-                <h3 className="font-semibold text-foreground mb-3">
-                  Price Legend
-                </h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-foreground">
+                    Price Legend
+                  </h3>
+                  <Link
+                    to="/courts#pricing"
+                    className="text-xs text-primary hover:underline"
+                  >
+                    View Full Pricing
+                  </Link>
+                </div>
                 {loadingPricing ? (
                   <div className="flex justify-center py-4">
                     <Loader className="w-6 h-6 animate-spin text-muted-foreground" />

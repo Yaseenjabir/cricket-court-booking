@@ -13,6 +13,8 @@ import {
   ChevronRight,
   Loader2,
   Loader,
+  User,
+  Globe,
 } from "lucide-react";
 import {
   Dialog,
@@ -721,15 +723,23 @@ const AdminBookings = () => {
                     Created By
                   </p>
                   <span
-                    className={`text-xs font-medium px-3 py-1.5 rounded-full inline-block ${
+                    className={`text-xs font-medium px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 ${
                       selectedBooking.createdBy === "admin"
                         ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                         : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
                     }`}
                   >
-                    {selectedBooking.createdBy === "admin"
-                      ? "👤 Admin"
-                      : "🌐 Customer"}
+                    {selectedBooking.createdBy === "admin" ? (
+                      <>
+                        <User className="w-3 h-3" />
+                        Admin
+                      </>
+                    ) : (
+                      <>
+                        <Globe className="w-3 h-3" />
+                        Customer
+                      </>
+                    )}
                   </span>
                 </div>
               </div>
@@ -836,17 +846,16 @@ const AdminBookings = () => {
                       {selectedBooking.totalPrice} SAR
                     </span>
                   </div>
-                  {selectedBooking.discountAmount &&
-                    selectedBooking.discountAmount > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">
-                          Discount
-                        </span>
-                        <span className="font-semibold text-green-600">
-                          -{selectedBooking.discountAmount} SAR
-                        </span>
-                      </div>
-                    )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      Discount
+                    </span>
+                    <span
+                      className={`font-semibold ${selectedBooking.discountAmount && selectedBooking.discountAmount > 0 ? "text-green-600" : ""}`}
+                    >
+                      -{selectedBooking.discountAmount || 0} SAR
+                    </span>
+                  </div>
                   <div className="flex justify-between items-center pt-2 border-t">
                     <span className="font-medium">Final Amount</span>
                     <span className="font-bold text-lg text-success">

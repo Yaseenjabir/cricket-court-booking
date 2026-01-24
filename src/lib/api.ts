@@ -268,7 +268,9 @@ export const adminApi = {
   pricing: {
     getAll: () => adminApiCall<Pricing[]>("/pricing"),
     getCurrent: () => adminApiCall<Pricing>("/pricing/current"),
-    create: (data: Omit<Pricing, "_id" | "createdAt" | "updatedAt">) =>
+    create: (
+      data: Omit<Pricing, "_id" | "createdAt" | "updatedAt" | "isActive">,
+    ) =>
       adminApiCall<Pricing>("/pricing", {
         method: "POST",
         body: JSON.stringify(data),
@@ -277,6 +279,10 @@ export const adminApi = {
       adminApiCall<Pricing>(`/pricing/${id}`, {
         method: "PUT",
         body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      adminApiCall<{ message: string }>(`/pricing/${id}`, {
+        method: "DELETE",
       }),
   },
 

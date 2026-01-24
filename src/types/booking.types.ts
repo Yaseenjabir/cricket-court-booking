@@ -10,12 +10,11 @@ export interface Court {
 
 export interface Pricing {
   _id: string;
-  weekdayDayRate: number;
-  weekdayNightRate: number;
-  weekendDayRate: number;
-  weekendNightRate: number;
-  effectiveFrom: string;
-  status: "active" | "inactive";
+  days: "sun-wed" | "thu" | "fri" | "sat";
+  timeSlot: "day" | "night";
+  category: "weekday-day" | "weekday-night" | "weekend-day" | "weekend-night";
+  pricePerHour: number;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -43,7 +43,7 @@ const AdminNewBooking = () => {
 
   // Data states
   const [courts, setCourts] = useState<Court[]>([]);
-  const [pricing, setPricing] = useState<Pricing | null>(null);
+  const [pricing, setPricing] = useState<Pricing[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -80,7 +80,7 @@ const AdminNewBooking = () => {
     const fetchPricing = async () => {
       try {
         setLoadingPricing(true);
-        const response = await pricingApi.getCurrent();
+        const response = await adminApi.pricing.getAll();
         if (response.success && response.data) {
           setPricing(response.data);
         }
@@ -101,7 +101,7 @@ const AdminNewBooking = () => {
 
   // Generate time slots when court, date, or pricing changes
   useEffect(() => {
-    if (selectedCourt && pricing) {
+    if (selectedCourt && pricing.length > 0) {
       generateTimeSlots();
       fetchBookedSlots();
     }
@@ -188,9 +188,38 @@ const AdminNewBooking = () => {
     }
   };
 
+  // Helper function to get days category based on date
+  const getDays = (date: Date): "sun-wed" | "thu" | "fri" | "sat" => {
+    const dayOfWeek = date.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+
+    if (dayOfWeek >= 0 && dayOfWeek <= 3) {
+      return "sun-wed";
+    } else if (dayOfWeek === 4) {
+      return "thu";
+    } else if (dayOfWeek === 5) {
+      return "fri";
+    } else {
+      return "sat";
+    }
+  };
+
+  // Helper function to get price for a specific time slot
+  const getPriceForSlot = (date: Date, hour: number): number => {
+    // Use the selected date's pricing for all slots shown on that day
+    const days = getDays(date);
+    const timeSlot = hour >= 9 && hour < 19 ? "day" : "night";
+
+    // Find matching pricing rule
+    const rule = pricing.find(
+      (p) => p.days === days && p.timeSlot === timeSlot && p.isActive,
+    );
+
+    return rule?.pricePerHour || 0;
+  };
+
   // Generate time slots from 9 AM to 4 AM (next day)
   const generateTimeSlots = () => {
-    if (!pricing) return;
+    if (pricing.length === 0) return;
 
     const slots = [];
     const dayOfWeek = selectedDate.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
@@ -207,27 +236,7 @@ const AdminNewBooking = () => {
     // 9 AM to 11 PM
     for (let hour = 9; hour < 24; hour++) {
       const isNight = hour >= 19; // 7 PM onwards
-      let price = 0;
-
-      if (isNight) {
-        // Night pricing (7 PM to midnight)
-        if ([4, 5].includes(dayOfWeek)) {
-          // Thursday or Friday night - weekend night rate
-          price = pricing.weekendNightRate;
-        } else {
-          // Other nights including Saturday - weekday night rate
-          price = pricing.weekdayNightRate;
-        }
-      } else {
-        // Day pricing (9 AM to 7 PM)
-        if ([5, 6].includes(dayOfWeek)) {
-          // Friday, Saturday day - weekend day rate
-          price = pricing.weekendDayRate;
-        } else {
-          // Sunday-Thursday day - weekday day rate
-          price = pricing.weekdayDayRate;
-        }
-      }
+      const price = getPriceForSlot(selectedDate, hour);
 
       // Check if this hour has passed (only for today)
       const isPastHour = isToday && hour <= currentHour;
@@ -247,16 +256,8 @@ const AdminNewBooking = () => {
 
     // 12 AM to 4 AM (next day)
     for (let hour = 0; hour < 4; hour++) {
-      // These slots belong to the previous day for pricing purposes
-      let price = 0;
-
-      if ([4, 5].includes(dayOfWeek)) {
-        // If current day is Thursday or Friday, the overnight slots are weekend night
-        price = pricing.weekendNightRate;
-      } else {
-        // If current day is Saturday, Sunday-Wednesday, the overnight slots are weekday night
-        price = pricing.weekdayNightRate;
-      }
+      // These slots use the selected date's pricing (they belong to this booking day)
+      const price = getPriceForSlot(selectedDate, hour);
 
       // For next day slots (12 AM - 4 AM), they're only available if:
       // - It's NOT today, OR

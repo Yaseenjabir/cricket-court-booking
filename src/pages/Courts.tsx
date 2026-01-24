@@ -25,8 +25,9 @@ interface Court {
 
 interface PricingData {
   id: string;
-  dayType: "weekday" | "weekend";
+  days: "sun-wed" | "thu" | "fri" | "sat";
   timeSlot: "day" | "night";
+  category: "weekday-day" | "weekday-night" | "weekend-day" | "weekend-night";
   pricePerHour: number;
   isActive: boolean;
 }
@@ -100,11 +101,11 @@ const Courts = () => {
   };
 
   const getPrice = (
-    dayType: "weekday" | "weekend",
+    days: "sun-wed" | "thu" | "fri" | "sat",
     timeSlot: "day" | "night",
   ) => {
     const priceData = pricing.find(
-      (p) => p.dayType === dayType && p.timeSlot === timeSlot && p.isActive,
+      (p) => p.days === days && p.timeSlot === timeSlot && p.isActive,
     );
     return priceData?.pricePerHour || 0;
   };
@@ -127,24 +128,20 @@ const Courts = () => {
   };
 
   const getPricingForDay = (day: string, timeSlot: "day" | "night"): number => {
-    // Map display day to dayType and handle special cases
-    let dayType: "weekday" | "weekend" = "weekday";
+    // Map display day to backend days structure
+    let days: "sun-wed" | "thu" | "fri" | "sat";
 
-    if (day === "Friday" || (day === "Saturday" && timeSlot === "day")) {
-      dayType = "weekend";
+    if (day === "Sunday–Wednesday") {
+      days = "sun-wed";
+    } else if (day === "Thursday") {
+      days = "thu";
+    } else if (day === "Friday") {
+      days = "fri";
+    } else {
+      days = "sat";
     }
 
-    // Special case: Thursday night is weekend night (135)
-    if (day === "Thursday" && timeSlot === "night") {
-      dayType = "weekend";
-    }
-
-    // Special case: Saturday night is weekday night (110)
-    if (day === "Saturday" && timeSlot === "night") {
-      dayType = "weekday";
-    }
-
-    return getPrice(dayType, timeSlot);
+    return getPrice(days, timeSlot);
   };
 
   const getCategoryColor = (day: string, timeSlot: "day" | "night") => {

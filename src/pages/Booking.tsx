@@ -30,18 +30,9 @@ const Booking = () => {
 
   // API data states
   const [courts, setCourts] = useState<Court[]>([]);
-  const [pricing, setPricing] = useState<Pricing | null>(null);
+  const [pricing, setPricing] = useState<Pricing[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
-
-  console.log("Debug:", {
-    loadingCourts,
-    loadingPricing,
-    selectedCourt,
-    courtsCount: courts.length,
-    pricing,
-    timeSlotsCount: timeSlots.length,
-  });
 
   // Fetch courts on mount
   useEffect(() => {
@@ -73,9 +64,16 @@ const Booking = () => {
     const fetchPricing = async () => {
       try {
         setLoadingPricing(true);
-        const response = await pricingApi.getCurrent();
-        if (response.success && response.data) {
-          setPricing(response.data);
+        // Try to fetch all pricing rules (should be public endpoint)
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/pricing`,
+        );
+        const data = await response.json();
+
+        if (response.ok && data.success && data.data) {
+          setPricing(data.data);
+        } else {
+          console.error("Failed to fetch pricing:", data.message);
         }
       } catch (error) {
         console.error("Failed to fetch pricing:", error);
@@ -89,7 +87,7 @@ const Booking = () => {
 
   // Generate time slots when court, date, or pricing changes
   useEffect(() => {
-    if (selectedCourt && pricing) {
+    if (selectedCourt && pricing.length > 0) {
       generateTimeSlots();
       fetchBookedSlots();
     }
@@ -162,9 +160,38 @@ const Booking = () => {
     }
   };
 
+  // Helper function to get days category based on date
+  const getDays = (date: Date): "sun-wed" | "thu" | "fri" | "sat" => {
+    const dayOfWeek = date.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+
+    if (dayOfWeek >= 0 && dayOfWeek <= 3) {
+      return "sun-wed";
+    } else if (dayOfWeek === 4) {
+      return "thu";
+    } else if (dayOfWeek === 5) {
+      return "fri";
+    } else {
+      return "sat";
+    }
+  };
+
+  // Helper function to get price for a specific time slot
+  const getPriceForSlot = (date: Date, hour: number): number => {
+    // Use the selected date's pricing for all slots shown on that day
+    const days = getDays(date);
+    const timeSlot = hour >= 9 && hour < 19 ? "day" : "night";
+
+    // Find matching pricing rule
+    const rule = pricing.find(
+      (p) => p.days === days && p.timeSlot === timeSlot && p.isActive,
+    );
+
+    return rule?.pricePerHour || 0;
+  };
+
   // Generate time slots from 9 AM to 4 AM (next day)
   const generateTimeSlots = () => {
-    if (!pricing) return;
+    if (pricing.length === 0) return;
 
     const slots = [];
     const dayOfWeek = selectedDate.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
@@ -181,27 +208,7 @@ const Booking = () => {
     // 9 AM to 11 PM
     for (let hour = 9; hour < 24; hour++) {
       const isNight = hour >= 19; // 7 PM onwards
-      let price = 0;
-
-      if (isNight) {
-        // Night pricing (7 PM to midnight)
-        if ([4, 5].includes(dayOfWeek)) {
-          // Thursday or Friday night - weekend night rate
-          price = pricing.weekendNightRate;
-        } else {
-          // Other nights including Saturday - weekday night rate
-          price = pricing.weekdayNightRate;
-        }
-      } else {
-        // Day pricing (9 AM to 7 PM)
-        if ([5, 6].includes(dayOfWeek)) {
-          // Friday, Saturday day - weekend day rate
-          price = pricing.weekendDayRate;
-        } else {
-          // Sunday-Thursday day - weekday day rate
-          price = pricing.weekdayDayRate;
-        }
-      }
+      const price = getPriceForSlot(selectedDate, hour);
 
       // Check if this hour has passed (only for today)
       const isPastHour = isToday && hour <= currentHour;
@@ -221,16 +228,8 @@ const Booking = () => {
 
     // 12 AM to 4 AM (next day)
     for (let hour = 0; hour < 4; hour++) {
-      // These slots belong to the previous day for pricing purposes
-      let price = 0;
-
-      if ([4, 5].includes(dayOfWeek)) {
-        // If current day is Thursday or Friday, the overnight slots are weekend night
-        price = pricing.weekendNightRate;
-      } else {
-        // If current day is Saturday, Sunday-Wednesday, the overnight slots are weekday night
-        price = pricing.weekdayNightRate;
-      }
+      // These slots use the selected date's pricing
+      const price = getPriceForSlot(selectedDate, hour);
 
       // For next day slots (12 AM - 4 AM), they're only available if:
       // - It's NOT today, OR
@@ -402,30 +401,31 @@ const Booking = () => {
     setSelectedCourt(courtId);
   };
 
-  const priceCategories = pricing
-    ? [
-        {
-          label: "Weekday Day",
-          color: "bg-secondary/20 border-secondary",
-          price: `${pricing.weekdayDayRate} SAR/hr`,
-        },
-        {
-          label: "Weekday Night",
-          color: "bg-primary/20 border-primary",
-          price: `${pricing.weekdayNightRate} SAR/hr`,
-        },
-        {
-          label: "Weekend Day",
-          color: "bg-accent/20 border-accent",
-          price: `${pricing.weekendDayRate} SAR/hr`,
-        },
-        {
-          label: "Weekend Night",
-          color: "bg-warning/20 border-warning",
-          price: `${pricing.weekendNightRate} SAR/hr`,
-        },
-      ]
-    : [];
+  const priceCategories =
+    pricing.length > 0
+      ? [
+          {
+            label: "Weekday Day",
+            color: "bg-secondary/20 border-secondary",
+            price: `${pricing.find((p) => p.category === "weekday-day")?.pricePerHour || 0} SAR/hr`,
+          },
+          {
+            label: "Weekday Night",
+            color: "bg-primary/20 border-primary",
+            price: `${pricing.find((p) => p.category === "weekday-night")?.pricePerHour || 0} SAR/hr`,
+          },
+          {
+            label: "Weekend Day",
+            color: "bg-accent/20 border-accent",
+            price: `${pricing.find((p) => p.category === "weekend-day")?.pricePerHour || 0} SAR/hr`,
+          },
+          {
+            label: "Weekend Night",
+            color: "bg-warning/20 border-warning",
+            price: `${pricing.find((p) => p.category === "weekend-night")?.pricePerHour || 0} SAR/hr`,
+          },
+        ]
+      : [];
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -598,6 +598,7 @@ const Booking = () => {
                     </p>
                   </div>
                 ) : loadingPricing ||
+                  pricing.length === 0 ||
                   !selectedCourt ||
                   timeSlots.length === 0 ? (
                   <div className="flex justify-center py-12">

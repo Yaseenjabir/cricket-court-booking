@@ -19,10 +19,20 @@ import { cn } from "@/lib/utils";
 import Cookies from "js-cookie";
 import { useToast } from "@/hooks/use-toast";
 
-const AdminSidebar = () => {
+const AdminSidebar = ({
+  onCollapsedChange,
+}: {
+  onCollapsedChange?: (collapsed: boolean) => void;
+}) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { toast } = useToast();
+
+  const handleCollapse = () => {
+    const newState = !collapsed;
+    setCollapsed(newState);
+    onCollapsedChange?.(newState);
+  };
 
   const handleLogout = () => {
     toast({
@@ -56,7 +66,7 @@ const AdminSidebar = () => {
     <aside
       className={cn(
         "hidden lg:flex min-h-screen bg-sidebar text-sidebar-foreground flex-col transition-all duration-300",
-        collapsed ? "w-20" : "w-64"
+        collapsed ? "w-20" : "w-64",
       )}
     >
       {/* Logo */}
@@ -85,7 +95,7 @@ const AdminSidebar = () => {
               "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
               isActive(item.href)
                 ? "bg-sidebar-accent text-sidebar-primary"
-                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
             )}
           >
             <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -99,7 +109,7 @@ const AdminSidebar = () => {
       {/* Bottom Actions */}
       <div className="p-3 border-t border-sidebar-border space-y-1">
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={handleCollapse}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
         >
           {collapsed ? (

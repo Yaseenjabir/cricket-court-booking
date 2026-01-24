@@ -100,7 +100,7 @@ const AdminCalendar = () => {
   for (let hour = 9; hour < 24; hour++) {
     timeSlots.push(`${hour.toString().padStart(2, "0")}:00`);
   }
-  for (let hour = 0; hour <= 4; hour++) {
+  for (let hour = 0; hour < 4; hour++) {
     timeSlots.push(`${hour.toString().padStart(2, "0")}:00`);
   }
 

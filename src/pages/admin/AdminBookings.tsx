@@ -52,7 +52,7 @@ type AdminBooking = {
   durationHours?: number;
   totalPrice: number;
   finalPrice: number;
-  pricingBreakdown?: any[];
+  pricingBreakdown?: Array<Record<string, unknown>>;
   discountAmount?: number;
   amountPaid?: number;
   status:
@@ -138,7 +138,7 @@ const AdminBookings = () => {
         setBookings((prev) =>
           prev.map((b) =>
             b._id === bookingToDelete
-              ? { ...b, status: "cancelled" as any }
+              ? { ...b, status: "cancelled" as const }
               : b,
           ),
         );
@@ -147,7 +147,7 @@ const AdminBookings = () => {
         if (selectedBooking?._id === bookingToDelete) {
           setSelectedBooking({
             ...selectedBooking,
-            status: "cancelled" as any,
+            status: "cancelled" as const,
           });
         }
 
@@ -186,11 +186,16 @@ const AdminBookings = () => {
       if (response.success) {
         setBookings((prev) =>
           prev.map((b) =>
-            b._id === bookingId ? { ...b, status: newStatus as any } : b,
+            b._id === bookingId
+              ? { ...b, status: newStatus as AdminBooking["status"] }
+              : b,
           ),
         );
         if (selectedBooking?._id === bookingId) {
-          setSelectedBooking({ ...selectedBooking, status: newStatus as any });
+          setSelectedBooking({
+            ...selectedBooking,
+            status: newStatus as AdminBooking["status"],
+          });
         }
         toast({
           title: "Success",
@@ -204,7 +209,10 @@ const AdminBookings = () => {
       if (selectedBooking) {
         // Force re-render of the select by temporarily clearing and restoring
         const original = selectedBooking.status;
-        setSelectedBooking({ ...selectedBooking, status: newStatus as any });
+        setSelectedBooking({
+          ...selectedBooking,
+          status: newStatus as AdminBooking["status"],
+        });
         setTimeout(() => {
           setSelectedBooking({ ...selectedBooking, status: original });
         }, 0);
@@ -234,13 +242,18 @@ const AdminBookings = () => {
       if (response.success) {
         setBookings((prev) =>
           prev.map((b) =>
-            b._id === bookingId ? { ...b, paymentStatus: newStatus as any } : b,
+            b._id === bookingId
+              ? {
+                  ...b,
+                  paymentStatus: newStatus as AdminBooking["paymentStatus"],
+                }
+              : b,
           ),
         );
         if (selectedBooking?._id === bookingId) {
           setSelectedBooking({
             ...selectedBooking,
-            paymentStatus: newStatus as any,
+            paymentStatus: newStatus as AdminBooking["paymentStatus"],
           });
         }
         toast({
@@ -256,7 +269,7 @@ const AdminBookings = () => {
         const original = selectedBooking.paymentStatus;
         setSelectedBooking({
           ...selectedBooking,
-          paymentStatus: newStatus as any,
+          paymentStatus: newStatus as AdminBooking["paymentStatus"],
         });
         setTimeout(() => {
           setSelectedBooking({ ...selectedBooking, paymentStatus: original });

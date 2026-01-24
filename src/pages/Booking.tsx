@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 const Booking = () => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
   const [selectedCourt, setSelectedCourt] = useState<string>("");
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [slotError, setSlotError] = useState<string>("");
@@ -166,7 +167,7 @@ const Booking = () => {
     if (!pricing) return;
 
     const slots = [];
-    const isWeekend = [5, 6].includes(selectedDate.getDay()); // Friday=5, Saturday=6
+    const dayOfWeek = selectedDate.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
 
     // Check if selected date is today
     const today = new Date();
@@ -182,10 +183,24 @@ const Booking = () => {
       const isNight = hour >= 19; // 7 PM onwards
       let price = 0;
 
-      if (isWeekend) {
-        price = isNight ? pricing.weekendNightRate : pricing.weekendDayRate;
+      if (isNight) {
+        // Night pricing (7 PM to midnight)
+        if ([4, 5].includes(dayOfWeek)) {
+          // Thursday or Friday night - weekend night rate
+          price = pricing.weekendNightRate;
+        } else {
+          // Other nights including Saturday - weekday night rate
+          price = pricing.weekdayNightRate;
+        }
       } else {
-        price = isNight ? pricing.weekdayNightRate : pricing.weekdayDayRate;
+        // Day pricing (9 AM to 7 PM)
+        if ([5, 6].includes(dayOfWeek)) {
+          // Friday, Saturday day - weekend day rate
+          price = pricing.weekendDayRate;
+        } else {
+          // Sunday-Thursday day - weekday day rate
+          price = pricing.weekdayDayRate;
+        }
       }
 
       // Check if this hour has passed (only for today)
@@ -199,16 +214,23 @@ const Booking = () => {
         available: !isPastHour, // Disable past hours on current day
         price,
         category: isNight ? "night" : "day",
-        isWeekend,
+        isWeekend: [5, 6].includes(dayOfWeek),
         isPast: isPastHour,
       });
     }
 
     // 12 AM to 4 AM (next day)
-    for (let hour = 0; hour <= 4; hour++) {
-      const price = isWeekend
-        ? pricing.weekendNightRate
-        : pricing.weekdayNightRate;
+    for (let hour = 0; hour < 4; hour++) {
+      // These slots belong to the previous day for pricing purposes
+      let price = 0;
+
+      if ([4, 5].includes(dayOfWeek)) {
+        // If current day is Thursday or Friday, the overnight slots are weekend night
+        price = pricing.weekendNightRate;
+      } else {
+        // If current day is Saturday, Sunday-Wednesday, the overnight slots are weekday night
+        price = pricing.weekdayNightRate;
+      }
 
       // For next day slots (12 AM - 4 AM), they're only available if:
       // - It's NOT today, OR
@@ -221,7 +243,7 @@ const Booking = () => {
         available: !isPastHour,
         price,
         category: "night",
-        isWeekend,
+        isWeekend: [5, 6].includes(dayOfWeek),
         nextDay: true,
         isPast: isPastHour,
       });
@@ -252,8 +274,27 @@ const Booking = () => {
       return;
     }
 
-    // If deselecting, always allow it
+    // If deselecting
     if (selectedSlots.includes(time)) {
+      // Check if it's a middle slot (not at either end)
+      const allSlotTimes = timeSlots.map((s) => s.time);
+      const currentIndices = selectedSlots
+        .map((t) => allSlotTimes.indexOf(t))
+        .sort((a, b) => a - b);
+      const timeIndex = allSlotTimes.indexOf(time);
+
+      const minIndex = Math.min(...currentIndices);
+      const maxIndex = Math.max(...currentIndices);
+
+      // If trying to unselect a middle slot
+      if (timeIndex !== minIndex && timeIndex !== maxIndex) {
+        setSlotError(
+          "You can only unselect from the ends. Remove slots in order from either end.",
+        );
+        setTimeout(() => setSlotError(""), 4000);
+        return;
+      }
+
       setSelectedSlots(selectedSlots.filter((t) => t !== time));
       return;
     }
@@ -331,6 +372,7 @@ const Booking = () => {
     // Don't allow going to past dates
     if (previousDay >= new Date(new Date().setHours(0, 0, 0, 0))) {
       setSelectedDate(previousDay);
+      setCalendarMonth(previousDay);
       setSelectedSlots([]); // Clear selected slots when changing date
       setSlotError(""); // Clear any errors
     }
@@ -339,6 +381,7 @@ const Booking = () => {
   const goToNextDay = () => {
     const nextDay = addDays(selectedDate, 1);
     setSelectedDate(nextDay);
+    setCalendarMonth(nextDay);
     setSelectedSlots([]); // Clear selected slots when changing date
     setSlotError(""); // Clear any errors
   };
@@ -410,9 +453,12 @@ const Booking = () => {
                 <Calendar
                   mode="single"
                   selected={selectedDate}
+                  month={calendarMonth}
+                  onMonthChange={setCalendarMonth}
                   onSelect={(date) => {
                     if (date) {
                       setSelectedDate(date);
+                      setCalendarMonth(date);
                       setSelectedSlots([]); // Clear slots when date changes
                     }
                   }}

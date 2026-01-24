@@ -197,6 +197,16 @@
   .stat-card {
     @apply bg-card rounded-xl border p-6 hover:shadow-lg transition-all duration-300;
   }
+
+  /* Override shadcn calendar accent background when a day is selected (Booking page) */
+  .booking-calendar :is(button, div, td):has([aria-selected]) {
+    background-color: transparent !important;
+  }
+
+  /* Override shadcn calendar accent background when a day is selected (Admin New Booking) */
+  .admin-booking-calendar :is(button, div, td):has([aria-selected]) {
+    background-color: transparent !important;
+  }
 }
 
 @layer utilities {

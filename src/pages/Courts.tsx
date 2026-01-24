@@ -52,7 +52,7 @@ const Courts = () => {
 
       if (response.ok && data.success) {
         const activeCourts = data.data.filter(
-          (court: any) => court.status === "active"
+          (court: Court) => court.status === "active",
         );
         setCourts(activeCourts);
       }
@@ -88,59 +88,69 @@ const Courts = () => {
 
   const getPrice = (
     dayType: "weekday" | "weekend",
-    timeSlot: "day" | "night"
+    timeSlot: "day" | "night",
   ) => {
     const priceData = pricing.find(
-      (p) => p.dayType === dayType && p.timeSlot === timeSlot && p.isActive
+      (p) => p.dayType === dayType && p.timeSlot === timeSlot && p.isActive,
     );
     return priceData?.pricePerHour || 0;
   };
 
-  const getDayRange = (
-    dayType: "weekday" | "weekend",
-    timeSlot: "day" | "night"
-  ) => {
-    if (dayType === "weekday") {
-      return "Sun - Wed";
-    } else if (timeSlot === "day") {
-      return "Fri - Sat";
-    } else {
-      return "Thu, Fri, Sat";
-    }
-  };
-
   const getTimeRange = (timeSlot: "day" | "night") => {
-    return timeSlot === "day" ? "9 AM - 7 PM" : "7 PM - 4 AM";
+    return timeSlot === "day" ? "9 AM - 6 PM" : "7 PM - 4 AM";
   };
 
-  const getCategoryLabel = (
-    dayType: "weekday" | "weekend",
-    timeSlot: "day" | "night"
-  ) => {
-    if (dayType === "weekday" && timeSlot === "day") return "Weekday Day";
-    if (dayType === "weekday" && timeSlot === "night") return "Weekday Night";
-    if (dayType === "weekend" && timeSlot === "day") return "Weekend Day";
-    return "Weekend Night";
+  const getCategoryLabel = (day: string, timeSlot: "day" | "night") => {
+    if (day === "Sunday–Wednesday" && timeSlot === "day") return "Weekday Day";
+    if (day === "Sunday–Wednesday" && timeSlot === "night")
+      return "Weekday Night";
+    if (day === "Thursday" && timeSlot === "day") return "Weekday Day";
+    if (day === "Thursday" && timeSlot === "night") return "Weekend Night";
+    if (day === "Friday" && timeSlot === "day") return "Weekend Day";
+    if (day === "Friday" && timeSlot === "night") return "Weekend Night";
+    if (day === "Saturday" && timeSlot === "day") return "Weekend Day";
+    if (day === "Saturday" && timeSlot === "night") return "Weekday Night";
+    return "";
   };
 
-  const getCategoryColor = (
-    dayType: "weekday" | "weekend",
-    timeSlot: "day" | "night"
-  ) => {
-    if (dayType === "weekday" && timeSlot === "day")
-      return "bg-secondary/20 text-secondary";
-    if (dayType === "weekday" && timeSlot === "night")
-      return "bg-primary/20 text-primary";
-    if (dayType === "weekend" && timeSlot === "day")
-      return "bg-accent/20 text-accent";
+  const getPricingForDay = (day: string, timeSlot: "day" | "night"): number => {
+    // Map display day to dayType and handle special cases
+    let dayType: "weekday" | "weekend" = "weekday";
+
+    if (day === "Friday" || (day === "Saturday" && timeSlot === "day")) {
+      dayType = "weekend";
+    }
+
+    // Special case: Thursday night is weekend night (135)
+    if (day === "Thursday" && timeSlot === "night") {
+      dayType = "weekend";
+    }
+
+    // Special case: Saturday night is weekday night (110)
+    if (day === "Saturday" && timeSlot === "night") {
+      dayType = "weekday";
+    }
+
+    return getPrice(dayType, timeSlot);
+  };
+
+  const getCategoryColor = (day: string, timeSlot: "day" | "night") => {
+    const category = getCategoryLabel(day, timeSlot);
+    if (category === "Weekday Day") return "bg-secondary/20 text-secondary";
+    if (category === "Weekday Night") return "bg-primary/20 text-primary";
+    if (category === "Weekend Day") return "bg-accent/20 text-accent";
     return "bg-warning/20 text-warning";
   };
 
   const pricingRows = [
-    { dayType: "weekday" as const, timeSlot: "day" as const },
-    { dayType: "weekday" as const, timeSlot: "night" as const },
-    { dayType: "weekend" as const, timeSlot: "day" as const },
-    { dayType: "weekend" as const, timeSlot: "night" as const },
+    { day: "Sunday–Wednesday", timeSlot: "day" as const },
+    { day: "Sunday–Wednesday", timeSlot: "night" as const },
+    { day: "Thursday", timeSlot: "day" as const },
+    { day: "Thursday", timeSlot: "night" as const },
+    { day: "Friday", timeSlot: "day" as const },
+    { day: "Friday", timeSlot: "night" as const },
+    { day: "Saturday", timeSlot: "day" as const },
+    { day: "Saturday", timeSlot: "night" as const },
   ];
 
   const amenities = [
@@ -331,7 +341,7 @@ const Courts = () => {
                           className="hover:bg-muted/50 transition-colors"
                         >
                           <td className="px-6 py-4 text-sm text-foreground">
-                            {getDayRange(row.dayType, row.timeSlot)}
+                            {row.day}
                           </td>
                           <td className="px-6 py-4 text-sm text-muted-foreground">
                             {getTimeRange(row.timeSlot)}
@@ -339,15 +349,15 @@ const Courts = () => {
                           <td className="px-6 py-4">
                             <span
                               className={`px-2 py-1 text-xs rounded font-medium ${getCategoryColor(
-                                row.dayType,
-                                row.timeSlot
+                                row.day,
+                                row.timeSlot,
                               )}`}
                             >
-                              {getCategoryLabel(row.dayType, row.timeSlot)}
+                              {getCategoryLabel(row.day, row.timeSlot)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm text-right font-semibold text-foreground">
-                            {getPrice(row.dayType, row.timeSlot)}
+                            {getPricingForDay(row.day, row.timeSlot)}
                           </td>
                         </tr>
                       ))}
@@ -362,23 +372,23 @@ const Courts = () => {
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <p className="text-sm font-semibold text-foreground">
-                            {getDayRange(row.dayType, row.timeSlot)}
+                            {row.day}
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
                             {getTimeRange(row.timeSlot)}
                           </p>
                         </div>
                         <span className="text-lg font-semibold text-foreground">
-                          {getPrice(row.dayType, row.timeSlot)} SAR
+                          {getPricingForDay(row.day, row.timeSlot)} SAR
                         </span>
                       </div>
                       <span
                         className={`inline-block px-2 py-1 text-xs rounded font-medium ${getCategoryColor(
-                          row.dayType,
-                          row.timeSlot
+                          row.day,
+                          row.timeSlot,
                         )}`}
                       >
-                        {getCategoryLabel(row.dayType, row.timeSlot)}
+                        {getCategoryLabel(row.day, row.timeSlot)}
                       </span>
                     </div>
                   ))}

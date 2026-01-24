@@ -14,6 +14,7 @@ import {
   Loader,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { CONTACT_DETAILS, MAP_EMBED_URL } from "@/constants/contactInfo";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const CONTACT_URL = "/contact";
@@ -42,15 +43,18 @@ const Contact = () => {
     {
       icon: MapPin,
       title: "Address",
-      content:
-        "123 Sports Avenue, Al Malqa District, Riyadh 12345, Saudi Arabia",
+      content: CONTACT_DETAILS.address,
     },
-    { icon: Phone, title: "Phone", content: "+966 50 123 4567" },
-    { icon: Mail, title: "Email", content: "contact@jeddahcricketnets.com" },
+    ...CONTACT_DETAILS.phones.map((phone) => ({
+      icon: Phone,
+      title: "Phone",
+      content: phone,
+    })),
+    { icon: Mail, title: "Email", content: CONTACT_DETAILS.email },
     {
       icon: Clock,
       title: "Operating Hours",
-      content: "9:00 AM - 4:00 AM (Next Day), Daily",
+      content: CONTACT_DETAILS.hours,
     },
   ];
 
@@ -299,17 +303,18 @@ const Contact = () => {
                 </div>
               </div>
 
-              {/* Map Placeholder */}
+              {/* Map */}
               <div className="bg-card rounded-xl border overflow-hidden">
-                <div className="h-64 bg-muted flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-muted-foreground">Map View</p>
-                    <p className="text-sm text-muted-foreground">
-                      123 Sports Avenue, Riyadh
-                    </p>
-                  </div>
-                </div>
+                <iframe
+                  src={MAP_EMBED_URL}
+                  width="100%"
+                  height="450"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Jeddah Cricket Nets Location"
+                />
               </div>
             </div>
           </div>

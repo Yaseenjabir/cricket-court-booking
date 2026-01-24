@@ -465,16 +465,16 @@ const Booking = () => {
                   disabled={(date) =>
                     date < new Date(new Date().setHours(0, 0, 0, 0))
                   }
-                  className="rounded-md border mt-2 pointer-events-auto"
+                  className="rounded-md border mt-2 pointer-events-auto booking-calendar"
                   modifiers={{
                     today: new Date(),
                   }}
-                  modifiersClassNames={{
-                    today:
-                      "bg-green-200 text-orange-600 dark:bg-green-900/20 dark:text-orange-400 font-semibold",
-                    selected:
-                      "!bg-transparent rounded !text-orange-600 dark:!text-orange-400 font-bold ",
-                  }}
+                  // modifiersClassNames={{
+                  //   today:
+                  //     "bg-green-200 text-orange-600 dark:bg-green-900/20 dark:text-orange-400 font-semibold",
+                  //   selected:
+                  //     "!bg-transparent rounded-2 !text-orange-600 dark:!text-orange-400 font-bold ",
+                  // }}
                 />
               </div>
               {/* Court Selector */}

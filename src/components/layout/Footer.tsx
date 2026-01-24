@@ -8,6 +8,7 @@ import {
   Instagram,
   Twitter,
 } from "lucide-react";
+import { CONTACT_DETAILS } from "@/constants/contactInfo";
 
 const Footer = () => {
   return (
@@ -109,22 +110,38 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-sm text-white">
                 <MapPin className="w-4 h-4 text-secondary" />
-                123 Sports Avenue, Riyadh, KSA
+                {CONTACT_DETAILS.address}
               </li>
-              <li className="flex items-center gap-2 text-sm text-white">
-                <Phone className="w-4 h-4 text-secondary" />
-                +966 50 123 4567
-              </li>
+              {CONTACT_DETAILS.phones.map((phone) => (
+                <li
+                  key={phone}
+                  className="flex items-center gap-2 text-sm text-white"
+                >
+                  <Phone className="w-4 h-4 text-secondary" />
+                  {phone}
+                </li>
+              ))}
               <li className="flex items-center gap-2 text-sm text-white">
                 <Mail className="w-4 h-4 text-secondary" />
-                info@jeddahcricketnets.sa
+                {CONTACT_DETAILS.email}
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-muted/20 mt-8 pt-8 text-center text-sm text-white">
-          <p>© 2024 Jeddah Cricket Nets. All rights reserved.</p>
+        <div className="border-t border-muted/20 mt-8 pt-8 text-center text-sm text-white space-y-2">
+          <p>© 2026 Jeddah Cricket Nets. All rights reserved.</p>
+          <p>
+            Developed by{" "}
+            <a
+              href="https://yaseenjabir.site"
+              className="underline hover:text-background"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Yaseen Jabir
+            </a>
+          </p>
         </div>
       </div>
     </footer>

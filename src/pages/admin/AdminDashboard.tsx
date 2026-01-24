@@ -237,9 +237,6 @@ const AdminDashboard = () => {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase">
-                    Booking ID
-                  </th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase">
                     Customer
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase">
@@ -263,9 +260,6 @@ const AdminDashboard = () => {
                       key={booking.id}
                       className="hover:bg-muted/30 transition-colors"
                     >
-                      <td className="px-6 py-4 text-sm font-mono text-foreground">
-                        {booking.bookingId}
-                      </td>
                       <td className="px-6 py-4 text-sm text-foreground">
                         {booking.customer}
                       </td>

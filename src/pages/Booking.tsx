@@ -168,6 +168,15 @@ const Booking = () => {
     const slots = [];
     const isWeekend = [5, 6].includes(selectedDate.getDay()); // Friday=5, Saturday=6
 
+    // Check if selected date is today
+    const today = new Date();
+    const isToday =
+      selectedDate.getDate() === today.getDate() &&
+      selectedDate.getMonth() === today.getMonth() &&
+      selectedDate.getFullYear() === today.getFullYear();
+
+    const currentHour = today.getHours();
+
     // 9 AM to 11 PM
     for (let hour = 9; hour < 24; hour++) {
       const isNight = hour >= 19; // 7 PM onwards
@@ -179,32 +188,42 @@ const Booking = () => {
         price = isNight ? pricing.weekdayNightRate : pricing.weekdayDayRate;
       }
 
+      // Check if this hour has passed (only for today)
+      const isPastHour = isToday && hour <= currentHour;
+
       slots.push({
         time: `${hour.toString().padStart(2, "0")}:00`,
         display: `${hour > 12 ? hour - 12 : hour}:00 ${
           hour >= 12 ? "PM" : "AM"
         }`,
-        available: true, // Will be checked against bookings later
+        available: !isPastHour, // Disable past hours on current day
         price,
         category: isNight ? "night" : "day",
         isWeekend,
+        isPast: isPastHour,
       });
     }
 
     // 12 AM to 4 AM (next day)
-    for (let hour = 0; hour < 4; hour++) {
+    for (let hour = 0; hour <= 4; hour++) {
       const price = isWeekend
         ? pricing.weekendNightRate
         : pricing.weekdayNightRate;
 
+      // For next day slots (12 AM - 4 AM), they're only available if:
+      // - It's NOT today, OR
+      // - It's today AND current hour is >= 9 (meaning we're in the booking window)
+      const isPastHour = isToday && currentHour < 9;
+
       slots.push({
         time: `${hour.toString().padStart(2, "0")}:00`,
         display: `${hour === 0 ? 12 : hour}:00 AM`,
-        available: true, // Will be checked against bookings later
+        available: !isPastHour,
         price,
         category: "night",
         isWeekend,
         nextDay: true,
+        isPast: isPastHour,
       });
     }
 
@@ -213,6 +232,16 @@ const Booking = () => {
 
   const toggleSlot = (time: string) => {
     setSlotError(""); // Clear any previous errors
+
+    // Find the slot to check if it's available or past
+    const slot = timeSlots.find((s) => s.time === time);
+
+    // Check if slot is past hour (not available)
+    if (slot && !slot.available) {
+      setSlotError("Cannot book past time slots");
+      setTimeout(() => setSlotError(""), 4000);
+      return;
+    }
 
     // Check if slot is already booked
     if (bookedSlots.has(time)) {
@@ -504,7 +533,19 @@ const Booking = () => {
 
               {/* Time Slots Grid */}
               <div className="p-4">
-                {loadingPricing || !selectedCourt || timeSlots.length === 0 ? (
+                {courts.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <CalendarIcon className="w-12 h-12 text-muted-foreground mb-3 opacity-50" />
+                    <p className="text-muted-foreground text-sm font-medium">
+                      No courts available
+                    </p>
+                    <p className="text-muted-foreground text-xs mt-1">
+                      Please check back later or contact support
+                    </p>
+                  </div>
+                ) : loadingPricing ||
+                  !selectedCourt ||
+                  timeSlots.length === 0 ? (
                   <div className="flex justify-center py-12">
                     <Loader className="w-8 h-8 animate-spin text-muted-foreground" />
                   </div>
@@ -520,15 +561,16 @@ const Booking = () => {
                     {timeSlots.map((slot, index) => {
                       const isBooked = bookedSlots.has(slot.time);
                       const isSelected = selectedSlots.includes(slot.time);
+                      const isPastOrBooked = !slot.available || isBooked;
                       const isAvailable = slot.available && !isBooked;
 
                       return (
                         <button
                           key={index}
                           onClick={() => isAvailable && toggleSlot(slot.time)}
-                          disabled={!isAvailable}
+                          disabled={isPastOrBooked}
                           className={`p-3 rounded-lg text-sm font-medium transition-all border ${
-                            isBooked
+                            isPastOrBooked
                               ? "bg-destructive/10 border-destructive/30 text-destructive cursor-not-allowed opacity-60"
                               : isSelected
                                 ? "bg-primary border-primary text-primary-foreground shadow-md"
@@ -540,8 +582,10 @@ const Booking = () => {
                           }`}
                         >
                           <div>{slot.display}</div>
-                          {isBooked ? (
-                            <div className="text-xs mt-1">Booked</div>
+                          {isPastOrBooked ? (
+                            <div className="text-xs mt-1">
+                              {!slot.available ? "Past" : "Booked"}
+                            </div>
                           ) : isAvailable ? (
                             <div className="text-xs mt-1 opacity-70">
                               {slot.price} SAR
@@ -642,7 +686,9 @@ const Booking = () => {
                     <Link
                       to="/booking/details"
                       state={{
-                        court: selectedCourt,
+                        court:
+                          courts.find((c) => c.id === selectedCourt)?.name ||
+                          "Court",
                         date: selectedDate,
                         slots: selectedSlots,
                         total: calculateTotal(),

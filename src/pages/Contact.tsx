@@ -46,7 +46,7 @@ const Contact = () => {
         "123 Sports Avenue, Al Malqa District, Riyadh 12345, Saudi Arabia",
     },
     { icon: Phone, title: "Phone", content: "+966 50 123 4567" },
-    { icon: Mail, title: "Email", content: "info@jeddahcricketnets.sa" },
+    { icon: Mail, title: "Email", content: "contact@jeddahcricketnets.com" },
     {
       icon: Clock,
       title: "Operating Hours",

@@ -139,7 +139,7 @@ const AdminNewBooking = () => {
       }
 
       // 12 AM to 4 AM (next day)
-      for (let hour = 0; hour < 4; hour++) {
+      for (let hour = 0; hour <= 4; hour++) {
         slotsToCheck.push(`${hour.toString().padStart(2, "0")}:00`);
       }
 
@@ -232,7 +232,7 @@ const AdminNewBooking = () => {
     }
 
     // 12 AM to 4 AM (next day)
-    for (let hour = 0; hour < 4; hour++) {
+    for (let hour = 0; hour <= 4; hour++) {
       const price = isWeekend
         ? pricing.weekendNightRate
         : pricing.weekdayNightRate;
@@ -660,10 +660,6 @@ const AdminNewBooking = () => {
         {/* Summary */}
         <div className="lg:col-span-1">
           <div className="bg-card rounded-xl border p-6 sticky top-20">
-            <h3 className="font-semibold text-foreground mb-4">
-              Booking Summary
-            </h3>
-
             <h3 className="font-semibold text-foreground mb-4">
               Booking Summary
             </h3>

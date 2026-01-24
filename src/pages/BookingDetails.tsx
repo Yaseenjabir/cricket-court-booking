@@ -189,7 +189,7 @@ const BookingDetails = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">Court</p>
                       <p className="font-medium text-foreground">
-                        Court {bookingData.court}
+                        {bookingData.court}
                       </p>
                     </div>
                   </div>

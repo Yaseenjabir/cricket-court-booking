@@ -94,13 +94,32 @@ const Footer = () => {
 
           {/* Facilities */}
           <div>
-            <h4 className="font-semibold mb-4">Facilities</h4>
+            <h4 className="font-semibold mb-4">Legal</h4>
             <ul className="space-y-2">
-              <li className="text-white text-sm">5 Professional Courts</li>
-              <li className="text-white text-sm">Night Lighting</li>
-              <li className="text-white text-sm">Equipment Rental</li>
-              <li className="text-white text-sm">Changing Rooms</li>
-              <li className="text-white text-sm">Parking Available</li>
+              <li>
+                <Link
+                  to="/terms-of-service"
+                  className="text-white hover:text-background text-sm transition-colors"
+                >
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/refund-policy"
+                  className="text-white hover:text-background text-sm transition-colors"
+                >
+                  Refund Policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/privacy-policy"
+                  className="text-white hover:text-background text-sm transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+              </li>
             </ul>
           </div>
 

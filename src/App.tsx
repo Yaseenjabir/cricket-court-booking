@@ -17,6 +17,9 @@ import Payment from "./pages/Payment";
 import Confirmation from "./pages/Confirmation";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import TermsOfService from "./pages/TermsOfService";
+import RefundPolicy from "./pages/RefundPolicy";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 // Admin Pages
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -49,6 +52,9 @@ const App = () => (
             <Route path="/booking/payment" element={<Payment />} />
             <Route path="/booking/confirmation" element={<Confirmation />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           </Route>
 
           {/* Admin Routes */}

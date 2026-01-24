@@ -486,8 +486,20 @@ const BookingDetails = () => {
                 </Link>
 
                 <p className="text-xs text-muted-foreground text-center mt-4">
-                  By continuing, you agree to our Terms of Service and
-                  Cancellation Policy
+                  By continuing, you agree to our{" "}
+                  <Link
+                    to="/terms-of-service"
+                    className="text-primary hover:underline"
+                  >
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    to="/refund-policy"
+                    className="text-primary hover:underline"
+                  >
+                    Cancellation Policy
+                  </Link>
                 </p>
               </div>
             </div>
